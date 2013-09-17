@@ -16,11 +16,9 @@ _VOTE_SCORE =    7
 _WEIGHT_VECTOR = [
     1.0,    # geographical distance
     0.3,    # day offset
-    0.2,    # week offset
-    0.7,    # vote score
+    0.1,    # week offset
+    0.8,    # vote score
     ]
-
-# TODO redo math do, upload to github and reference here
 
 def top(content_list, target_vector, n):
     """Return the top n content ranked by proximity to the target vector."""
@@ -42,7 +40,7 @@ def top(content_list, target_vector, n):
 
     # create an array of the top content
     top_content = []
-    for _, i in scores[:10]:
+    for _, i in scores[:n]:
         top_content.append(content_list[i])
 
     # add the proximity data to make it easier to tweak the algorithm

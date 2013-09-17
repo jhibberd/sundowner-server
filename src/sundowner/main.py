@@ -21,11 +21,11 @@ def _get_target_vector(lng, lat):
     """
     now = long(time.time())
     return (
-        rand_lng,       # longitude 
-        rand_lat,       # latitude
-        now,            # created time
-        0,              # votes up
-        0,              # votes down
+        lng,    # longitude 
+        lat,    # latitude
+        now,    # created time
+        0,      # votes up
+        0,      # votes down
         )
 
 class _Handler(tornado.web.RequestHandler):
