@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title>Logo</title>
+        <script type="text/javascript" src="main.js"></script>
+    </head>
+    <body>
+        <select id="logoType">
+            <option value="iphone">iPhone</option>
+            <option value="iphone_retina">iPhone Retina</option>
+            <option value="android_hdpi">Android HDPI</option>
+            <option value="android_mdpi">Android MDPI</option>
+            <option value="android_xhdpi">Android XHDPI</option>
+            <option value="android_xxhdpi">Android XXDPI</option>
+        </select>
+        <input type="button" value="Render" onclick="javascript:renderLogo();" />
+        <input type="button" value="Export" onclick="javascript:openLogo();" /><br />
+        <canvas id="canvas"></canvas>
+    </body>
+</html>
