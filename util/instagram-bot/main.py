@@ -28,6 +28,7 @@ import httplib
 import pymongo
 import random
 import requests
+import sundowner.data.users
 import time
 
 
@@ -57,11 +58,11 @@ def convert(media):
     if media['type'] != 'image':
         return None
 
-    # hash the image ID to a 32 byte hexadecimal string to simluate a GUID but
-    # prevent duplicates being stored (as it's deterministic)
+    # hash the image ID to a 24 byte hexadecimal string to simluate an ObjectId
+    # but prevent duplicates being stored (as it's deterministic)
     m = hashlib.md5()
     m.update(media['id'])
-    doc_id = m.hexdigest()
+    doc_id = ObjectId(m.hexdigest()[:24])
 
     # image caption is optional so provide replacement
     def format_caption():
@@ -76,7 +77,10 @@ def convert(media):
             return caption_text
         return caption_text[:CAPTION_MAX_LEN] + '...'
 
-    username =  media['user']['username']
+    username = media['user']['username']
+    user_id = sundowner.data.users.Data.get_id(
+        username, create_if_not_found=True)
+
     # not sure why Instagram express Unix timestamps as strings
     created =   long(media['created_time'])
     lng =       media['location']['longitude']
@@ -87,7 +91,7 @@ def convert(media):
 
     return {
         '_id':              doc_id,
-        'username':         username,
+        'user_id':          user_id,
         'created':          created,
         'url':              url,
         'votes':            (votes_up, 0), # no down votes
@@ -101,7 +105,7 @@ def convert(media):
             },
         }
 
-def request(mongo_collection):
+def request(content_collection):
     """Issue a single HTTP request to Instagram for media data associated with
     a random geographical location within the predefined bounds.
     """
@@ -149,16 +153,18 @@ def request(mongo_collection):
 
     media = response.json()['data']
     content = filter(None, map(convert, media))
-    map(mongo_collection.save, content)
+    map(content_collection.save, content)
 
 
 if __name__ == '__main__':
 
+    conn = pymongo.MongoClient().sundowner_instagram
+    sundowner.data.users.Data.init(conn)
     # this collection needs a geospatial index
-    mongo_collection = pymongo.MongoClient().sundowner_instagram.content
+    content_collection = conn.content
 
     while True:
-        request(mongo_collection)
+        request(content_collection)
 
         # wait a random amount of time between requests to avoid Instagram
         # from interpreting our requests as crawl attempts. The average wait
