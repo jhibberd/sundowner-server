@@ -1,11 +1,13 @@
 import json
 import sundowner.data
 import sundowner.data.content
+import sundowner.data.users
 import sundowner.data.votes
 import sundowner.ranking
 import time
 import tornado.ioloop
 import tornado.web
+from operator import itemgetter
 from sundowner.data.votes import Vote
 
 
@@ -52,13 +54,18 @@ class _ContentHandler(tornado.web.RequestHandler):
         # rank content and return top
         top_content = sundowner.ranking.top(content, target_vector, n=10)
 
+        # replace user IDs with usernames
+        user_ids = map(itemgetter('user_id'), top_content)
+        username_map = sundowner.data.users.Data.get_usernames(user_ids)
+
         result = []
         for content in top_content:
+            username = username_map[content['user_id']]
             result.append(_trimdict({
                 'id':           str(content['_id']),
                 'title':        content['title'],
                 'url':          content.get('url'),
-                'username':     content['username'],
+                'username':     username,
                 }))
 
         self.write({'data': result})
@@ -70,16 +77,18 @@ class _ContentHandler(tornado.web.RequestHandler):
         longitude =     payload['longitude']
         latitude =      payload['latitude']
         title =         payload['title']
-        username =      payload['username']
+        user_id =       payload['user_id']
         accuracy =      payload['accuracy']
         url =           payload.get('url')
+
+        # TODO validate user ID
 
         created =       long(time.time())
         doc = _trimdict({
             'title':            title,
             'url':              url,
             'created':          created,
-            'username':         username,
+            'user_id':          user_id,
             'accuracy':         accuracy, # meters
             'loc': {
                 'type':         'Point',
