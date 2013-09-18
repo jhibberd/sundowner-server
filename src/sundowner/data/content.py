@@ -2,6 +2,7 @@
 content.
 """
 
+import pymongo
 from bson.objectid import ObjectId
 
 
@@ -14,6 +15,7 @@ class Data(object):
     def init(cls, conn):
         """See sundowner.data"""
         cls._collection = conn.content
+        cls._collection.ensure_index([('loc', pymongo.GEOSPHERE)])
     
     @classmethod
     def get_nearby(cls, lng, lat):
