@@ -1,5 +1,5 @@
 import datetime
-import sundowner.database
+import sundowner.data.content
 from math import radians, cos, sin, asin, sqrt
 
 
@@ -89,7 +89,7 @@ def _score(delta_vector):
 def _delta_location(c, t):
     """Distance in meters between two points on Earth."""
     return 1 - (_haversine(c[_LNG], c[_LAT], t[_LNG], t[_LAT]) / \
-                sundowner.database.QUERY_RADIUS)
+                sundowner.data.content.QUERY_RADIUS)
 
 def _delta_day_offset(c, t):
     """Distance in seconds between two times of day (00:00 - 23:59).
@@ -137,7 +137,7 @@ def _haversine(lgn1, lat1, lgn2, lat2):
     dlat = lat2 - lat1 
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlgn/2)**2
     c = 2 * asin(sqrt(a)) 
-    meters = sundowner.database.EARTH_RADIUS * c
+    meters = sundowner.data.content.EARTH_RADIUS * c
     return meters 
 
 def _wilson_score_interval(up, down):

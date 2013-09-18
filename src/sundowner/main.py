@@ -1,9 +1,12 @@
 import json
-import sundowner.database
+import sundowner.data
+import sundowner.data.content
+import sundowner.data.votes
 import sundowner.ranking
 import time
 import tornado.ioloop
 import tornado.web
+from sundowner.data.votes import Vote
 
 
 def _trimdict(d):
@@ -28,27 +31,34 @@ def _get_target_vector(lng, lat):
         0,      # votes down
         )
 
-class _Handler(tornado.web.RequestHandler):
+class _ContentHandler(tornado.web.RequestHandler):
 
     def get(self):
         """Return top content near a location."""
 
-        lng = float(self.get_argument('longitude'))
-        lat = float(self.get_argument('latitude'))
+        lng =       float(self.get_argument('longitude'))
+        lat =       float(self.get_argument('latitude'))
+        user_id =   self.get_argument('user_id')
 
+        # get all nearby content
         target_vector = _get_target_vector(lng, lat)
-        content = sundowner.database.Database.get_content_nearby(lng, lat)
+        content = sundowner.data.content.Data.get_nearby(lng, lat)
+
+        # filter content that the user has voted down
+        user_votes = sundowner.data.votes.Data.get_user_votes(user_id)
+        rule = lambda content: (content['_id'], Vote.DOWN) not in user_votes
+        content = filter(rule, content)
+
+        # rank content and return top
         top_content = sundowner.ranking.top(content, target_vector, n=10)
 
-        # TODO cleanup once Android and iOS apps have been updated
         result = []
-        for doc in top_content:
+        for content in top_content:
             result.append(_trimdict({
-                'title':        doc['title'],
-                'url':          doc.get('url'),
-                'created':      doc['created'],
-                'username':     doc['username'],
-                'distance':     0,
+                'id':           str(content['_id']),
+                'title':        content['title'],
+                'url':          content.get('url'),
+                'username':     content['username'],
                 }))
 
         self.write({'data': result})
@@ -76,15 +86,37 @@ class _Handler(tornado.web.RequestHandler):
                 'coordinates':  [longitude, latitude],
                 }
             })
-        sundowner.database.Database.put(doc)
+        sundowner.data.content.Data.put(doc)
+
+
+class _VotesHandler(tornado.web.RequestHandler):
+
+    def post(self):
+        """Register a vote up or down against a piece of content."""
+
+        payload =       json.loads(self.request.body)
+        content_id =    payload['content_id']
+        user_id =       payload['user_id']
+        vote =          payload['vote']
+
+        # TODO validate all 3 fields
+        # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
+
+        success = sundowner.data.votes.Data.put(content_id, user_id, vote)
+        if success:
+            sundowner.data.content.Data.inc_vote(content_id, vote)
+        else:
+            # the vote has already been placed; silently fail
+            pass
 
 
 application = tornado.web.Application([
-    (r'/', _Handler),
-])
+    (r'/content',   _ContentHandler),   # GET, POST
+    (r'/votes',     _VotesHandler),     # POST
+    ])
 
 def main():
-    sundowner.database.Database.connect()
+    sundowner.data.connect()
     application.listen(8050)
     tornado.ioloop.IOLoop.instance().start()
 

@@ -2,26 +2,21 @@
 content.
 """
 
-import pymongo
+from bson.objectid import ObjectId
 
 
 QUERY_RADIUS =  2000    # meters (used by ranking module)
 EARTH_RADIUS =  6371000 # meters (used by ranking module)
 
-class Database(object):
+class Data(object):
 
     @classmethod
-    def connect(cls, host='localhost', port=27017):
-        """Create a global connection to mongoDB.
-
-        The connection is thread-safe:
-        http://api.mongodb.org/python/current/faq.html#is-pymongo-thread-safe
-        """
-        cls._content_collection = \
-            pymongo.MongoClient(host, port).sundowner_instagram.content
+    def init(cls, conn):
+        """See sundowner.data"""
+        cls._collection = conn.content
     
     @classmethod
-    def get_content_nearby(cls, lng, lat):
+    def get_nearby(cls, lng, lat):
         """Return an unsorted list of all content occurring within a circle on
         the Earth's surface with point (lng, lat) and radius 'QUERY_RADIUS'.
         """
@@ -41,10 +36,18 @@ class Database(object):
         # which might be a problem in areas with lots of content. A better, but 
         # more complex, solution might be to calculate the query radius based 
         # on the concentration of content in an area.
-        return list(cls._content_collection.find(spec))
+        return list(cls._collection.find(spec))
 
     @classmethod
     def put(cls, content):
         """Save new content to the database."""
-        cls._content_collection.insert(content)
+        cls._collection.insert(content)
+
+    @classmethod
+    def inc_vote(cls, content_id, vote):
+        """Increment either the votes up or down count for the content."""
+        assert vote in [Vote.UP, Vote.DOWN]
+        field = 'votes.up' if vote == Vote.UP else 'votes.down'
+        cls._collection.update(
+            {"_id", ObjectId(content_id)}, {'$inc': {field: 1}}) 
 

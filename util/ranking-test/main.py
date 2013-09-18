@@ -10,7 +10,8 @@ matador box for mongoDB connectivity:
 
 import pprint
 import pymongo
-import sundowner.database
+import sundowner.data
+import sundowner.data.content
 import sundowner.ranking
 import sys
 import time
@@ -25,9 +26,9 @@ GEO_BOUNDS_SOUTH_LAT =  2.876972
 rand_lng = random.uniform(GEO_BOUNDS_WEST_LNG, GEO_BOUNDS_EAST_LNG)
 rand_lat = random.uniform(GEO_BOUNDS_NORTH_LAT, GEO_BOUNDS_SOUTH_LAT)
 
-# query the database with the random location
-sundowner.database.Database.connect(port=27018)
-content = sundowner.database.Database.get_content_nearby(rand_lng, rand_lat)
+# query the content database with the random location
+sundowner.data.connect(port=27018)
+content = sundowner.data.content.Data.get_nearby(rand_lng, rand_lat)
 
 # define target vector
 # votes values are set as 0 because the delta function for calculating the
