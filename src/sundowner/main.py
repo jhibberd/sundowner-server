@@ -1,9 +1,19 @@
+"""Run the Sundowner API server.
+
+Usage:
+
+    python main.py path-to-config
+
+"""
+
 import json
+import sundowner.config
 import sundowner.data
 import sundowner.data.content
 import sundowner.data.users
 import sundowner.data.votes
 import sundowner.ranking
+import sys
 import time
 import tornado.ioloop
 import tornado.web
@@ -125,8 +135,13 @@ application = tornado.web.Application([
     ])
 
 def main():
+    try:
+        config_filepath = sys.argv[1]
+    except IndexError:
+        raise Exception('no config file specified')
+    sundowner.config.init(config_filepath)
     sundowner.data.connect()
-    application.listen(8050)
+    application.listen(sundowner.config.cfg['port'])
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':
