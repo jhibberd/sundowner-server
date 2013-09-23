@@ -28,6 +28,75 @@ function renderLogo() {
 
 function drawLogo(size, opaqueBackground) {
 
+    var COLOR_BACKGROUND =  '#ffffff';
+    var COLOR_FOREGROUND =  '#99CC00';
+    var COLOR_SHADOW =      '##FF8800';
+    var COLOR_TRANSPARENT = 'rgba(0, 0, 0, 0)';
+
+    var colorBackground = opaqueBackground ? 
+        COLOR_BACKGROUND : COLOR_TRANSPARENT;
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    // size the canvas
+    ctx.canvas.width = size;
+    ctx.canvas.height = size;
+
+    // fill background
+    ctx.fillStyle = colorBackground;
+    ctx.fillRect(0, 0, size, size);
+
+    // draw marker
+    var circleCenterX = size / 2;
+    var circleCenterY = size * .45;
+    var circleRadiusBig = size * .37;
+    ctx.fillStyle = '#669900';
+    ctx.beginPath();
+    ctx.arc(
+        circleCenterX, 
+        circleCenterY, 
+        circleRadiusBig, 
+        1 * Math.PI, 
+        2 * Math.PI, 
+        false);
+    ctx.lineTo(circleCenterX + circleRadiusBig, size);
+    ctx.lineTo(circleCenterX - circleRadiusBig, size);
+    ctx.fill();
+
+
+    // define shadow
+    //ctx.save();
+    ctx.shadowColor = COLOR_SHADOW;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 0;
+
+    // draw marker
+    var circleCenterX = size / 2;
+    var circleCenterY = size * .45;
+    var circleRadius = size * .25;
+    ctx.fillStyle = COLOR_FOREGROUND;
+    ctx.beginPath();
+    ctx.arc(
+        circleCenterX, 
+        circleCenterY, 
+        circleRadius, 
+        0, 
+        2 * Math.PI, 
+        false);
+    //ctx.lineTo(circleCenterX, size * .85);
+    ctx.fill();
+
+    var w = size * .05;
+    ctx.fillRect(circleCenterX - (w/2),
+                 circleCenterX + (w/2),
+                 w,
+                 size - circleCenterY);
+}
+
+/*
+function drawLogo(size, opaqueBackground) {
+
     var COLOR_BACKGROUND =  '#b3def2';
     var COLOR_FOREGROUND =  '#33b5e5';
     var COLOR_SHADOW =      '#0099cc';
@@ -70,6 +139,7 @@ function drawLogo(size, opaqueBackground) {
     ctx.lineTo(circleCenterX, size * .85);
     ctx.fill();
 }
+*/
 
 function openLogo() {
     var canvas = document.getElementById("canvas");

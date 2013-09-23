@@ -4,6 +4,7 @@ content.
 
 import pymongo
 from bson.objectid import ObjectId
+from sundowner.data.votes import Vote
 
 
 QUERY_RADIUS =  2000    # meters (used by ranking module)
@@ -51,5 +52,5 @@ class Data(object):
         assert vote in [Vote.UP, Vote.DOWN]
         field = 'votes.up' if vote == Vote.UP else 'votes.down'
         cls._collection.update(
-            {"_id", ObjectId(content_id)}, {'$inc': {field: 1}}) 
+            {'_id': ObjectId(content_id)}, {'$inc': {field: 1}}) 
 

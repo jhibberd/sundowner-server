@@ -17,6 +17,7 @@ import sys
 import time
 import tornado.ioloop
 import tornado.web
+from bson.objectid import ObjectId
 from operator import itemgetter
 from sundowner.data.votes import Vote
 
@@ -92,6 +93,7 @@ class _ContentHandler(tornado.web.RequestHandler):
         url =           payload.get('url')
 
         # TODO validate user ID
+        user_id = ObjectId(user_id)
 
         created =       long(time.time())
         doc = _trimdict({
@@ -121,7 +123,7 @@ class _VotesHandler(tornado.web.RequestHandler):
         # TODO validate all 3 fields
         # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
 
-        success = sundowner.data.votes.Data.put(content_id, user_id, vote)
+        success = sundowner.data.votes.Data.put(user_id, content_id, vote)
         if success:
             sundowner.data.content.Data.inc_vote(content_id, vote)
         else:

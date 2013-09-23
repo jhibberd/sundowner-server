@@ -95,7 +95,7 @@ def convert(media):
         'user_id':          user_id,
         'created':          created,
         'url':              url,
-        'votes':            (votes_up, 0), # no down votes
+        'votes':            {'up': votes_up, 'down': 0},
         'title':            title,
 
         # location is expressed using GeoJSON to maxke use of mongoDB's 

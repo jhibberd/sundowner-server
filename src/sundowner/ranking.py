@@ -51,10 +51,12 @@ def top(content_list, target_vector, n):
 def _to_vector(content):
     """Extract the salient fields from a content dict and express as a vector.
     """
-    lng, lat =              content['loc']['coordinates']
-    vote_up, vote_down =    content.get('votes', (0, 0))
-    created =               content['created']
-    return (lng, lat, created, vote_up, vote_down)
+    lng, lat =      content['loc']['coordinates']
+    votes =         content.get('votes', {})
+    created =       content['created']
+    votes_up =      votes.get('up', 0)
+    votes_down =    votes.get('down', 0)
+    return (lng, lat, created, votes_up, votes_down)
 
 def _prepare_vector(vector):
     """Augment the vector with additional values derived from the original 
