@@ -88,7 +88,7 @@ def convert(media):
     lat =       media['location']['latitude']
     url =       media['images']['standard_resolution']['url']
     votes_up =  media['likes']['count']
-    title =     format_caption()
+    text =      format_caption()
 
     return {
         '_id':              doc_id,
@@ -96,7 +96,7 @@ def convert(media):
         'created':          created,
         'url':              url,
         'votes':            {'up': votes_up, 'down': 0},
-        'title':            title,
+        'text':             text,
 
         # location is expressed using GeoJSON to maxke use of mongoDB's 
         # geospatial index
@@ -144,6 +144,12 @@ def request(content_collection):
     # before continuing
     elif response.status_code == httplib.SERVICE_UNAVAILABLE:
         print 'Service Unavailable'
+        time.sleep(1800) # 30 mins
+        return
+
+    # from time to time it happens
+    elif response.status_code == httplib.INTERNAL_SERVER_ERROR:
+        print 'Internal Server Error'
         time.sleep(1800) # 30 mins
         return
 

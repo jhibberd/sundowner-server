@@ -3,6 +3,7 @@ content.
 """
 
 import pymongo
+import time
 from bson.objectid import ObjectId
 from sundowner.data.votes import Vote
 
@@ -44,6 +45,8 @@ class Data(object):
     @classmethod
     def put(cls, content):
         """Save new content to the database."""
+        content['user_id'] = ObjectId(content['user_id'])
+        content['created'] = long(time.time())
         cls._collection.insert(content)
 
     @classmethod
@@ -53,4 +56,11 @@ class Data(object):
         field = 'votes.up' if vote == Vote.UP else 'votes.down'
         cls._collection.update(
             {'_id': ObjectId(content_id)}, {'$inc': {field: 1}}) 
+
+    @classmethod
+    def exists(cls, content_id):
+        """Return whether a content ID exists."""
+        # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
+        return cls._collection.find(
+            {'_id': ObjectId(content_id)}, {'_id': 1}).limit(1).count() == 1
 
