@@ -10,9 +10,6 @@ import httplib
 import json
 import sundowner.config
 import sundowner.data
-import sundowner.data.content
-import sundowner.data.users
-import sundowner.data.votes
 import sundowner.ranking
 import sys
 import time
@@ -117,10 +114,10 @@ class ContentHandler(RequestHandler):
 
         # get all nearby content
         target_vector = _get_target_vector(params['lng'], params['lat'])
-        content = yield sundowner.data.content.Data.get_nearby(params['lng'], params['lat'])
+        content = yield sundowner.data.content.get_nearby(params['lng'], params['lat'])
 
         # filter content that the user has voted down
-        user_votes = yield sundowner.data.votes.Data.get_user_votes(params['user_id'])
+        user_votes = yield sundowner.data.votes.get_user_votes(params['user_id'])
         rule = lambda content: (content['_id'], Vote.DOWN) not in user_votes
         content = filter(rule, content)
 
@@ -129,7 +126,7 @@ class ContentHandler(RequestHandler):
 
         # replace user IDs with usernames
         user_ids = map(itemgetter('user_id'), top_content)
-        username_map = yield sundowner.data.users.Data.get_usernames(user_ids)
+        username_map = yield sundowner.data.users.get_usernames(user_ids)
 
         result = []
         for content in top_content:
@@ -157,7 +154,7 @@ class ContentHandler(RequestHandler):
             }
         yield self.validate_post_params(params)
 
-        yield sundowner.data.content.Data.put({
+        yield sundowner.data.content.put({
             'text':             params['text'],
             'url':              params['url'],
             'user_id':          params['user_id'],
@@ -199,7 +196,7 @@ class ContentHandler(RequestHandler):
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
-        if not (yield sundowner.data.users.Data.exists(user_id)):
+        if not (yield sundowner.data.users.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
 
     @tornado.gen.coroutine
@@ -245,7 +242,7 @@ class ContentHandler(RequestHandler):
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
-        if not (yield sundowner.data.users.Data.exists(user_id)):
+        if not (yield sundowner.data.users.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
 
         accuracy = params['accuracy']
@@ -288,10 +285,10 @@ class VotesHandler(RequestHandler):
             }
         yield self.validate_get_params(params)
 
-        accepted = yield sundowner.data.votes.Data.put(
+        accepted = yield sundowner.data.votes.put(
             params['user_id'], params['content_id'], params['vote'])
         if accepted:
-            yield sundowner.data.content.Data.inc_vote(params['content_id'], params['vote'])
+            yield sundowner.data.content.inc_vote(params['content_id'], params['vote'])
             # otherwise the vote has already been places
 
         status_code = httplib.CREATED if accepted else httplib.OK
@@ -305,7 +302,7 @@ class VotesHandler(RequestHandler):
             raise BadRequestError("Missing 'content_id' argument.")
         if not ObjectId.is_valid(content_id):
             raise BadRequestError("'content_id' is not a valid ID.")
-        if not (yield sundowner.data.content.Data.exists(content_id)):
+        if not (yield sundowner.data.content.exists(content_id)):
             raise BadRequestError("'content_id' does not exist.")
 
         user_id = params['user_id']
@@ -313,7 +310,7 @@ class VotesHandler(RequestHandler):
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
-        if not (yield sundowner.data.users.Data.exists(user_id)):
+        if not (yield sundowner.data.users.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
 
         vote = params['vote']

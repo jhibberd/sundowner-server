@@ -3,23 +3,26 @@ import pymongo.errors
 import tornado.gen
 from bson.objectid import ObjectId
 
+class Vote(object):
+    DOWN =  0
+    UP =    1
 
 class Data(object):
 
-    @classmethod
-    @tornado.gen.coroutine
-    def init(cls, db):
+    def __init__(self, db):
         """See sundowner.data"""
-        cls._coll = db.votes
-        yield cls._coll.ensure_index([
+        self._coll = db.votes
+
+    @tornado.gen.coroutine
+    def ensure_indexes(self):
+        yield self._coll.ensure_index([
             ('user_id',     pymongo.ASCENDING),
             ('content_id',  pymongo.ASCENDING),
             ('vote',        pymongo.ASCENDING),
             ], unique=True)
 
-    @classmethod
     @tornado.gen.coroutine
-    def get_user_votes(cls, user_id):
+    def get_user_votes(self, user_id):
         """Return a set of content that the user has votes on in the form:
 
             [(content, vote), ...]
@@ -42,7 +45,7 @@ class Data(object):
         """
 
         result = []
-        cursor = cls._coll.find(
+        cursor = self._coll.find(
             spec={'user_id': ObjectId(user_id)},
             fields={
                 '_id':          0,
@@ -54,15 +57,14 @@ class Data(object):
             result.append((doc['content_id'], doc['vote']))
         raise tornado.gen.Return(result)
 
-    @classmethod
     @tornado.gen.coroutine
-    def put(cls, user_id, content_id, vote):
+    def put(self, user_id, content_id, vote):
         """Register a user voting content up or down.
 
         Returns whether the vote was successfully registered.
         """
         try:
-            yield cls._coll.insert({
+            yield self._coll.insert({
                 'user_id':      ObjectId(user_id),
                 'content_id':   ObjectId(content_id),
                 'vote':         vote,
@@ -72,9 +74,4 @@ class Data(object):
             raise tornado.gen.Return(False)
         else:
             raise tornado.gen.Return(True)
-
-
-class Vote(object):
-    DOWN =  0
-    UP =    1
 
