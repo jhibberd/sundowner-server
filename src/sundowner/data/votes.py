@@ -1,21 +1,24 @@
 import pymongo
 import pymongo.errors
+import tornado.gen
 from bson.objectid import ObjectId
 
 
 class Data(object):
 
     @classmethod
-    def init(cls, conn):
+    @tornado.gen.coroutine
+    def init(cls, db):
         """See sundowner.data"""
-        cls._collection = conn.votes
-        cls._collection.ensure_index([
+        cls._coll = db.votes
+        yield cls._coll.ensure_index([
             ('user_id',     pymongo.ASCENDING),
             ('content_id',  pymongo.ASCENDING),
             ('vote',        pymongo.ASCENDING),
             ], unique=True)
 
     @classmethod
+    @tornado.gen.coroutine
     def get_user_votes(cls, user_id):
         """Return a set of content that the user has votes on in the form:
 
@@ -38,34 +41,37 @@ class Data(object):
         collection too
         """
 
-        cursor = cls._collection.find(
+        result = []
+        cursor = cls._coll.find(
             spec={'user_id': ObjectId(user_id)},
             fields={
                 '_id':          0,
                 'content_id':   1,
                 'vote':         1,
                 })
-
-        shorten = lambda doc: (doc['content_id'], doc['vote'])
-        return set(map(shorten, cursor))
+        while (yield cursor.fetch_next):
+            doc = cursor.next_object()
+            result.append((doc['content_id'], doc['vote']))
+        raise tornado.gen.Return(result)
 
     @classmethod
+    @tornado.gen.coroutine
     def put(cls, user_id, content_id, vote):
         """Register a user voting content up or down.
 
         Returns whether the vote was successfully registered.
         """
         try:
-            cls._collection.insert({
+            yield cls._coll.insert({
                 'user_id':      ObjectId(user_id),
                 'content_id':   ObjectId(content_id),
                 'vote':         vote,
                 })
         except pymongo.errors.DuplicateKeyError:
             # that vote has already been made
-            return False
+            raise tornado.gen.Return(False)
         else:
-            return True
+            raise tornado.gen.Return(True)
 
 
 class Vote(object):

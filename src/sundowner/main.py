@@ -16,6 +16,7 @@ import sundowner.data.votes
 import sundowner.ranking
 import sys
 import time
+import tornado.gen
 import tornado.ioloop
 import tornado.web
 from bson.objectid import ObjectId
@@ -24,10 +25,6 @@ from sundowner.data.votes import Vote
 
 
 # Helpers ----------------------------------------------------------------------
-
-def _trimdict(d):
-    """Remove all entries with a None value."""
-    return dict([(k, v) for k,v in d.items() if v is not None])
 
 def _get_target_vector(lng, lat):
     """Return the vector used as a target when scoring the proximity of 
@@ -72,10 +69,25 @@ class RequestHandler(tornado.web.RequestHandler):
             exception.message = 'Oops, an error occurred.'
 
         self.finish({
-            'error_type':       exception.__class__.__name__,
-            'code':             status_code,
-            'error_message':    exception.message,
-            })
+            'meta': {
+                'error_type':       exception.__class__.__name__,
+                'code':             status_code,
+                'error_message':    exception.message,
+                }})
+
+    def complete(self, status_code=httplib.OK, data=None):
+        """Return data in a consistent JSON format.
+
+        Adopted schema used by Instagram:
+        http://instagram.com/developer/endpoints/
+        """
+        result = {
+            'meta': {
+                'code': status_code,
+                }}
+        if data:
+            result['data'] = data
+        self.write(result)
 
 
 # Handlers ---------------------------------------------------------------------
@@ -92,44 +104,23 @@ MAX_URL_LEN =   2048
 
 class ContentHandler(RequestHandler):
 
+    @tornado.gen.coroutine
     def get(self):
         """Return top content near a location."""
 
-        lng =       self.get_argument('longitude')
-        lat =       self.get_argument('latitude')
-        user_id =   self.get_argument('user_id')
-
-        if lng is None:
-            raise BadRequestError("Missing 'lng' argument.")
-        try:
-            lng = float(lng)
-        except ValueError:
-            raise BadRequestError("'lng' is not a valid longitude.") 
-        if not (MIN_LNG <= lng <= MAX_LNG):
-            raise BadRequestError("'lng' is not a valid longitude.") 
-
-        if lat is None:
-            raise BadRequestError("Missing 'lat' argument.")
-        try:
-            lat = float(lat)
-        except ValueError:
-            raise BadRequestError("'lat' is not a valid latitude.") 
-        if not (MIN_LAT <= lat <= MAX_LAT):
-            raise BadRequestError("'lat' is not a valid latitude.") 
-
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        if not sundowner.data.users.Data.exists(user_id):
-            raise BadRequestError("'user_id' does not exist.")
+        params = {
+            'lng':      self.get_argument('lng'),
+            'lat':      self.get_argument('lat'),
+            'user_id':  self.get_argument('user_id'),
+            }
+        yield self.validate_get_params(params)
 
         # get all nearby content
-        target_vector = _get_target_vector(lng, lat)
-        content = sundowner.data.content.Data.get_nearby(lng, lat)
+        target_vector = _get_target_vector(params['lng'], params['lat'])
+        content = yield sundowner.data.content.Data.get_nearby(params['lng'], params['lat'])
 
         # filter content that the user has voted down
-        user_votes = sundowner.data.votes.Data.get_user_votes(user_id)
+        user_votes = yield sundowner.data.votes.Data.get_user_votes(params['user_id'])
         rule = lambda content: (content['_id'], Vote.DOWN) not in user_votes
         content = filter(rule, content)
 
@@ -138,7 +129,7 @@ class ContentHandler(RequestHandler):
 
         # replace user IDs with usernames
         user_ids = map(itemgetter('user_id'), top_content)
-        username_map = sundowner.data.users.Data.get_usernames(user_ids)
+        username_map = yield sundowner.data.users.Data.get_usernames(user_ids)
 
         result = []
         for content in top_content:
@@ -149,20 +140,39 @@ class ContentHandler(RequestHandler):
                 'url':          content['url'],
                 'username':     username,
                 })
+        self.complete(data=result)
 
-        self.write({'data': result})
-
+    @tornado.gen.coroutine
     def post(self):
         """Save content to the database."""
-        
-        payload =       self.get_json_request_body()
-        lng =           payload.get('lng')
-        lat =           payload.get('lat')
-        text =          payload.get('text')
-        user_id =       payload.get('user_id')
-        accuracy =      payload.get('accuracy')
-        url =           payload.get('url')
 
+        payload =           self.get_json_request_body()
+        params = {
+            'lng':          payload.get('lng'),
+            'lat':          payload.get('lat'),
+            'text':         payload.get('text'),
+            'user_id':      payload.get('user_id'),
+            'accuracy':     payload.get('accuracy'),
+            'url':          payload.get('url'),
+            }
+        yield self.validate_post_params(params)
+
+        yield sundowner.data.content.Data.put({
+            'text':             params['text'],
+            'url':              params['url'],
+            'user_id':          params['user_id'],
+            'accuracy':         params['accuracy'], # meters
+            'loc': {
+                'type':         'Point',
+                'coordinates':  [params['lng'], params['lat']],
+                }
+            })
+        self.complete(httplib.CREATED)
+
+    @tornado.gen.coroutine
+    def validate_get_params(self, params):
+
+        lng = params['lng']
         if lng is None:
             raise BadRequestError("Missing 'lng' argument.")
         try:
@@ -171,7 +181,9 @@ class ContentHandler(RequestHandler):
             raise BadRequestError("'lng' must be a float.") 
         if not (MIN_LNG <= lng <= MAX_LNG):
             raise BadRequestError("'lng' is not a valid longitude.") 
+        params['lng'] = lng
 
+        lat = params['lat']
         if lat is None:
             raise BadRequestError("Missing 'lat' argument.")
         try:
@@ -180,7 +192,42 @@ class ContentHandler(RequestHandler):
             raise BadRequestError("'lat' must be a float.") 
         if not (MIN_LAT <= lat <= MAX_LAT):
             raise BadRequestError("'lat' is not a valid latitude.") 
+        params['lat'] = lat
 
+        user_id = params['user_id']
+        if user_id is None:
+            raise BadRequestError("Missing 'user_id' argument.")
+        if not ObjectId.is_valid(user_id):
+            raise BadRequestError("'user_id' is not a valid ID.")
+        if not (yield sundowner.data.users.Data.exists(user_id)):
+            raise BadRequestError("'user_id' does not exist.")
+
+    @tornado.gen.coroutine
+    def validate_post_params(self, params):
+
+        lng = params['lng']
+        if lng is None:
+            raise BadRequestError("Missing 'lng' argument.")
+        try:
+            lng = float(lng)
+        except ValueError:
+            raise BadRequestError("'lng' must be a float.") 
+        if not (MIN_LNG <= lng <= MAX_LNG):
+            raise BadRequestError("'lng' is not a valid longitude.") 
+        params['lng'] = lng
+
+        lat = params['lat']
+        if lat is None:
+            raise BadRequestError("Missing 'lat' argument.")
+        try:
+            lat = float(lat)
+        except ValueError:
+            raise BadRequestError("'lat' must be a float.") 
+        if not (MIN_LAT <= lat <= MAX_LAT):
+            raise BadRequestError("'lat' is not a valid latitude.") 
+        params['lat'] = lat
+
+        text = params['text']
         if text is None:
             raise BadRequestError("Missing 'text' argument.")
         if not isinstance(text, basestring):
@@ -191,14 +238,17 @@ class ContentHandler(RequestHandler):
         if len(text) > MAX_TEXT_LEN:
             raise BadRequestError(
                 "'text' cannot exceed %s characters." % MAX_TEXT_LEN)
+        params['text'] = text
 
+        user_id = params['user_id']
         if user_id is None:
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
-        if not sundowner.data.users.Data.exists(user_id):
+        if not (yield sundowner.data.users.Data.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
 
+        accuracy = params['accuracy']
         if accuracy is not None:
             try:
                 accuracy = float(accuracy)
@@ -207,7 +257,9 @@ class ContentHandler(RequestHandler):
             # iOS supplied accuracy as a negative value if it's invalid
             if accuracy < 0:
                 accuracy = None
-            
+            params['accuracy'] = accuracy
+        
+        url = params['url']
         if url is not None:
             if not isinstance(url, basestring):
                 raise BadRequestError("'url' must be a string.")
@@ -219,54 +271,56 @@ class ContentHandler(RequestHandler):
                     "'url' cannot exceed %s characters." % MAX_URL_LEN)
             # currently no regex validation or HTTP checking validation is
             # performed on the URL
-
-        sundowner.data.content.Data.put({
-            'text':             text,
-            'url':              url,
-            'user_id':          user_id,
-            'accuracy':         accuracy, # meters
-            'loc': {
-                'type':         'Point',
-                'coordinates':  [lng, lat],
-                }
-            })
+            params['url'] = url
 
 
 class VotesHandler(RequestHandler):
 
+    @tornado.gen.coroutine
     def post(self):
         """Register a vote up or down against a piece of content."""
 
-        payload =       self.get_json_request_body()
-        content_id =    payload.get('content_id')
-        user_id =       payload.get('user_id')
-        vote =          payload.get('vote')
+        payload =           self.get_json_request_body()
+        params = {
+            'content_id':   payload.get('content_id'),
+            'user_id':      payload.get('user_id'),
+            'vote':         payload.get('vote'),
+            }
+        yield self.validate_get_params(params)
 
+        accepted = yield sundowner.data.votes.Data.put(
+            params['user_id'], params['content_id'], params['vote'])
+        if accepted:
+            yield sundowner.data.content.Data.inc_vote(params['content_id'], params['vote'])
+            # otherwise the vote has already been places
+
+        status_code = httplib.CREATED if accepted else httplib.OK
+        self.complete(status_code)
+
+    @tornado.gen.coroutine
+    def validate_get_params(self, params):
+
+        content_id = params['content_id']
         if content_id is None:
             raise BadRequestError("Missing 'content_id' argument.")
         if not ObjectId.is_valid(content_id):
             raise BadRequestError("'content_id' is not a valid ID.")
-        if not sundowner.data.content.Data.exists(content_id):
+        if not (yield sundowner.data.content.Data.exists(content_id)):
             raise BadRequestError("'content_id' does not exist.")
 
+        user_id = params['user_id']
         if user_id is None:
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
-        if not sundowner.data.users.Data.exists(user_id):
+        if not (yield sundowner.data.users.Data.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
 
+        vote = params['vote']
         if vote is None:
             raise BadRequestError("Missing 'vote' argument.")
         if vote not in [Vote.UP, Vote.DOWN]:
             raise BadRequestError("'vote' is not a valid vote type.")
-
-        success = sundowner.data.votes.Data.put(user_id, content_id, vote)
-        if success:
-            sundowner.data.content.Data.inc_vote(content_id, vote)
-        else:
-            # the vote has already been placed; silently fail
-            pass
 
 
 # Errors -----------------------------------------------------------------------

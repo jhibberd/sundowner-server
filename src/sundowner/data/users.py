@@ -1,15 +1,18 @@
+import tornado.gen
 from bson.objectid import ObjectId
 
 
 class Data(object):
 
     @classmethod
-    def init(cls, conn):
+    @tornado.gen.coroutine
+    def init(cls, db):
         """See sundowner.data"""
-        cls._collection = conn.users
-        cls._collection.ensure_index('username', unique=True)
+        cls._coll = db.users
+        yield cls._coll.ensure_index('username', unique=True)
 
     @classmethod
+    @tornado.gen.coroutine
     def get_id(cls, username, create_if_not_found=False):
         """Return the ObjectId associated with the username or None if the
         username doesn't exist.
@@ -17,27 +20,34 @@ class Data(object):
         If 'create_if_not_found' is true then an ID will be created in the
         database if the username doesn't exist.
         """
-        doc = cls._collection.find_one({'username': username})
+        doc = yield cls._coll.find_one({'username': username})
         if doc:
-            return doc['_id']
+            raise tornado.gen.Return(doc['_id'])
         elif create_if_not_found:
             doc_id = ObjectId()
-            cls._collection.insert({'_id': doc_id, 'username': username})
-            return doc_id
+            yield cls._coll.insert({'_id': doc_id, 'username': username})
+            raise tornado.gen.Return(doc_id)
         else:
-            return None
+            raise tornado.gen.Return(None)
 
     @classmethod
+    @tornado.gen.coroutine
     def get_usernames(cls, user_ids):
         """Resolve a list of user IDs to usernames."""
-        cursor = cls._collection.find(
+        cursor = cls._coll.find(
             {'_id': {'$in': user_ids}}, {'username': 1})
-        return dict([(doc['_id'], doc['username']) for doc in cursor])
+        result = []
+        while (yield cursor.fetch_next):
+            doc = cursor.next_object()
+            result.append((doc['_id'], doc['username']))
+        raise tornado.gen.Return(dict(result))
 
     @classmethod
+    @tornado.gen.coroutine
     def exists(cls, user_id):
         """Return whether a user ID exists."""
         # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
-        return cls._collection.find(
-            {'_id': ObjectId(user_id)}, {'_id': 1}).limit(1).count() == 1
+        count = yield cls._coll.find(
+            {'_id': ObjectId(user_id)}, {'_id': 1}).limit(1).count()
+        raise tornado.gen.Return(count == 1)
 

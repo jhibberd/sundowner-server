@@ -4,6 +4,7 @@ content.
 
 import pymongo
 import time
+import tornado.gen
 from bson.objectid import ObjectId
 from sundowner.data.votes import Vote
 
@@ -14,12 +15,14 @@ EARTH_RADIUS =  6371000 # meters (used by ranking module)
 class Data(object):
 
     @classmethod
-    def init(cls, conn):
+    @tornado.gen.coroutine
+    def init(cls, db):
         """See sundowner.data"""
-        cls._collection = conn.content
-        cls._collection.ensure_index([('loc', pymongo.GEOSPHERE)])
+        cls._coll = db.content
+        yield cls._coll.ensure_index([('loc', pymongo.GEOSPHERE)])
     
     @classmethod
+    @tornado.gen.coroutine
     def get_nearby(cls, lng, lat):
         """Return an unsorted list of all content occurring within a circle on
         the Earth's surface with point (lng, lat) and radius 'QUERY_RADIUS'.
@@ -40,27 +43,35 @@ class Data(object):
         # which might be a problem in areas with lots of content. A better, but 
         # more complex, solution might be to calculate the query radius based 
         # on the concentration of content in an area.
-        return list(cls._collection.find(spec))
+        result = []
+        cursor = cls._coll.find(spec)
+        while (yield cursor.fetch_next):
+            result.append(cursor.next_object())
+        raise tornado.gen.Return(result)
 
     @classmethod
+    @tornado.gen.coroutine
     def put(cls, content):
         """Save new content to the database."""
         content['user_id'] = ObjectId(content['user_id'])
         content['created'] = long(time.time())
-        cls._collection.insert(content)
+        yield cls._coll.insert(content)
 
     @classmethod
+    @tornado.gen.coroutine
     def inc_vote(cls, content_id, vote):
         """Increment either the votes up or down count for the content."""
         assert vote in [Vote.UP, Vote.DOWN]
         field = 'votes.up' if vote == Vote.UP else 'votes.down'
-        cls._collection.update(
+        yield cls._coll.update(
             {'_id': ObjectId(content_id)}, {'$inc': {field: 1}}) 
 
     @classmethod
+    @tornado.gen.coroutine
     def exists(cls, content_id):
         """Return whether a content ID exists."""
         # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
-        return cls._collection.find(
-            {'_id': ObjectId(content_id)}, {'_id': 1}).limit(1).count() == 1
+        count = yield cls._coll.find(
+            {'_id': ObjectId(content_id)}, {'_id': 1}).limit(1).count()
+        raise tornado.gen.Return(count == 1)
 
