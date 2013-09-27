@@ -84,6 +84,7 @@ class RequestHandler(tornado.web.RequestHandler):
                 }}
         if data:
             result['data'] = data
+        self.set_status(status_code)
         self.write(result)
 
 

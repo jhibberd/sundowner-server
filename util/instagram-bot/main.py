@@ -25,10 +25,9 @@ The server storing this data can allocate 20GB which means that roughly
 
 import hashlib
 import httplib
-import pymongo
 import random
 import requests
-import sundowner.data.users
+import sundowner.data
 import time
 from bson.objectid import ObjectId
 
