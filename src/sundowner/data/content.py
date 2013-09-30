@@ -44,7 +44,7 @@ class Data(object):
         # more complex, solution might be to calculate the query radius based 
         # on the concentration of content in an area.
         cursor = self._coll.find(spec)
-        result = yield cursor.to_list(length=50000)
+        result = yield cursor.to_list(length=10000)
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
