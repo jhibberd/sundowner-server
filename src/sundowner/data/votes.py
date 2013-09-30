@@ -44,7 +44,6 @@ class Data(object):
         collection too
         """
 
-        result = []
         cursor = self._coll.find(
             spec={'user_id': ObjectId(user_id)},
             fields={
@@ -52,9 +51,8 @@ class Data(object):
                 'content_id':   1,
                 'vote':         1,
                 })
-        while (yield cursor.fetch_next):
-            doc = cursor.next_object()
-            result.append((doc['content_id'], doc['vote']))
+        result = yield cursor.to_list(length=10000)
+        result = [d['content_id'], d['vote'] for d in result]
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine

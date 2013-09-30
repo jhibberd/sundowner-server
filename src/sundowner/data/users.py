@@ -35,11 +35,9 @@ class Data(object):
         """Resolve a list of user IDs to usernames."""
         cursor = self._coll.find(
             {'_id': {'$in': user_ids}}, {'username': 1})
-        result = []
-        while (yield cursor.fetch_next):
-            doc = cursor.next_object()
-            result.append((doc['_id'], doc['username']))
-        raise tornado.gen.Return(dict(result))
+        result = cursor.to_list(length=10)
+        result = dict([d['_id'], d['username'] for d in result])
+        raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
     def exists(self, user_id):

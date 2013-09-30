@@ -43,10 +43,8 @@ class Data(object):
         # which might be a problem in areas with lots of content. A better, but 
         # more complex, solution might be to calculate the query radius based 
         # on the concentration of content in an area.
-        result = []
         cursor = self._coll.find(spec)
-        while (yield cursor.fetch_next):
-            result.append(cursor.next_object())
+        result = yield cursor.to_list(length=50000)
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
