@@ -36,7 +36,7 @@ class Data(object):
         cursor = self._coll.find(
             {'_id': {'$in': user_ids}}, {'username': 1})
         result = cursor.to_list(length=10)
-        result = dict([d['_id'], d['username'] for d in result])
+        result = dict([(d['_id'], d['username']) for d in result])
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
