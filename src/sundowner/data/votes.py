@@ -52,7 +52,7 @@ class Data(object):
                 'vote':         1,
                 })
         result = yield cursor.to_list(length=10000)
-        result = [d['content_id'], d['vote'] for d in result]
+        result = [(d['content_id'], d['vote']) for d in result]
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
