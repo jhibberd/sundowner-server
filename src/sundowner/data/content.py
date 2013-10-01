@@ -20,7 +20,14 @@ class Data(object):
     
     @tornado.gen.coroutine
     def ensure_indexes(self):
-       yield self._coll.ensure_index([('loc', pymongo.GEOSPHERE)])
+        # instead of explicity sorting the results by the 'score' field we're
+        # relying on the fact that the compound index will already be storing
+        # the documents in this order
+        # TODO is this a safe assumption?
+        yield self._coll.ensure_index([
+            ('loc', pymongo.GEOSPHERE), 
+            ('score': pymongo.DESCENDING),
+            ])
 
     @tornado.gen.coroutine
     def get_nearby(self, lng, lat):
@@ -39,12 +46,9 @@ class Data(object):
                 },
             }
 
-        # NOTE The number of content docs being returned isn't being limited 
-        # which might be a problem in areas with lots of content. A better, but 
-        # more complex, solution might be to calculate the query radius based 
-        # on the concentration of content in an area.
-        cursor = self._coll.find(spec)
-        result = yield cursor.to_list(length=10000)
+        # NOTE I'm not sure whether it's necessary to apply a 'limit' twice
+        cursor = self._coll.find(spec).limit(10)
+        result = yield cursor.to_list(length=10)
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
