@@ -1,10 +1,11 @@
-"""Script to update the score in all content documents.
-
-Usage:
-
-    mongo --eval "var DATABASE_NAME='sundowner_sandbox';" update-score.js
-
-"""
+/*
+ * Script to update the score in all content documents.
+ *
+ * Usage:
+ *
+ *   mongo --eval "var DATABASE_NAME='sundowner_sandbox';" update-score.js
+ *
+ */
 
 var WEIGHT_VOTE             = 0.8;
 var WEIGHT_DAY_OFFSET       = 0.3;
