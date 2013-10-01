@@ -136,6 +136,10 @@ class ContentHandler(RequestHandler):
                 'type':         'Point',
                 'coordinates':  [params['lng'], params['lat']],
                 },
+            'votes': {
+                'up':           0,
+                'down':         0,
+                },
             'score': {
                 'overall':      0,
                 'vote':         0,
