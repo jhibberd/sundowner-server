@@ -11,7 +11,7 @@ from sundowner.data.votes import Vote
 
 class Data(object):
 
-    QUERY_RADIUS =  2000    # meters (used by ranking module)
+    QUERY_RADIUS =  1000    # meters (used by ranking module)
     EARTH_RADIUS =  6371000 # meters (used by ranking module)
 
     def __init__(self, db):
@@ -23,10 +23,9 @@ class Data(object):
         # instead of explicity sorting the results by the 'score' field we're
         # relying on the fact that the compound index will already be storing
         # the documents in this order
-        # TODO is this a safe assumption?
         yield self._coll.ensure_index([
             ('loc', pymongo.GEOSPHERE), 
-            ('score': pymongo.DESCENDING),
+            ('score.overall', pymongo.DESCENDING),
             ])
 
     @tornado.gen.coroutine

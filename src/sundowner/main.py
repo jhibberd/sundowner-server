@@ -10,7 +10,7 @@ import httplib
 import json
 import sundowner.config
 import sundowner.data
-import sundowner.ranking
+import sundowner.score
 import sys
 import time
 import tornado.gen
@@ -22,24 +22,6 @@ from sundowner.data.votes import Vote
 
 
 # Helpers ----------------------------------------------------------------------
-
-def _get_target_vector(lng, lat):
-    """Return the vector used as a target when scoring the proximity of 
-    content.
-
-    Vote values are set to 0 
-    Vote values are set as 0 because the delta function for calculating the
-    vote distance always compares the content's vote score against 1 (the best
-    vote score).
-    """
-    now = long(time.time())
-    return (
-        lng,    # longitude 
-        lat,    # latitude
-        now,    # created time
-        0,      # votes up
-        0,      # votes down
-        )
 
 class RequestHandler(tornado.web.RequestHandler):
     """Custom request handler behaviour."""
@@ -114,16 +96,14 @@ class ContentHandler(RequestHandler):
         yield self.validate_get_params(params)
 
         # get all nearby content
-        target_vector = _get_target_vector(params['lng'], params['lat'])
-        content = yield sundowner.data.content.get_nearby(params['lng'], params['lat'])
+        top_content = yield sundowner.data.content.get_nearby(params['lng'], params['lat'])
 
         # filter content that the user has voted down
         user_votes = yield sundowner.data.votes.get_user_votes(params['user_id'])
         rule = lambda content: (content['_id'], Vote.DOWN) not in user_votes
-        content = filter(rule, content)
-
-        # rank content and return top
-        top_content = sundowner.ranking.top(content, target_vector, n=10)
+        # TODO rethink this feature as it means we have to request an 
+        # additional (but uncertain) number of docs
+        # content = filter(rule, content)
 
         # replace user IDs with usernames
         user_ids = map(itemgetter('user_id'), top_content)
@@ -163,7 +143,13 @@ class ContentHandler(RequestHandler):
             'loc': {
                 'type':         'Point',
                 'coordinates':  [params['lng'], params['lat']],
-                }
+                },
+            'score': {
+                'overall':      0,
+                'vote':         0,
+                'day_offset':   0,
+                'week_offset':  0,
+                },
             })
         self.complete(httplib.CREATED)
 
