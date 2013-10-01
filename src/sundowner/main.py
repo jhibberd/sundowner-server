@@ -10,7 +10,6 @@ import httplib
 import json
 import sundowner.config
 import sundowner.data
-import sundowner.score
 import sys
 import time
 import tornado.gen
