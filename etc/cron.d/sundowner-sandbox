@@ -1,0 +1,1 @@
+*/15 * * * * root mongo --eval "var DATABASE_NAME='sundowner_sandbox';" /home/jhibberd/projects/sundowner-server/src/mongodb-js/update-score.js

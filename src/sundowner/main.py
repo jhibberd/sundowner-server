@@ -97,13 +97,6 @@ class ContentHandler(RequestHandler):
         # get all nearby content
         top_content = yield sundowner.data.content.get_nearby(params['lng'], params['lat'])
 
-        # filter content that the user has voted down
-        user_votes = yield sundowner.data.votes.get_user_votes(params['user_id'])
-        rule = lambda content: (content['_id'], Vote.DOWN) not in user_votes
-        # TODO rethink this feature as it means we have to request an 
-        # additional (but uncertain) number of docs
-        # content = filter(rule, content)
-
         # replace user IDs with usernames
         user_ids = map(itemgetter('user_id'), top_content)
         username_map = yield sundowner.data.users.get_usernames(user_ids)
