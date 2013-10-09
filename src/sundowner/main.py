@@ -63,7 +63,7 @@ class RequestHandler(tornado.web.RequestHandler):
             'meta': {
                 'code': status_code,
                 }}
-        if data:
+        if data is not None:
             result['data'] = data
         self.set_status(status_code)
         self.write(result)
@@ -90,7 +90,6 @@ class ContentHandler(RequestHandler):
         params = {
             'lng':      self.get_argument('lng'),
             'lat':      self.get_argument('lat'),
-            'user_id':  self.get_argument('user_id'),
             }
         yield self.validate_get_params(params)
 
@@ -173,14 +172,6 @@ class ContentHandler(RequestHandler):
         if not (MIN_LAT <= lat <= MAX_LAT):
             raise BadRequestError("'lat' is not a valid latitude.") 
         params['lat'] = lat
-
-        user_id = params['user_id']
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        if not (yield sundowner.data.users.exists(user_id)):
-            raise BadRequestError("'user_id' does not exist.")
 
     @tornado.gen.coroutine
     def validate_post_params(self, params):
