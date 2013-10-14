@@ -10,33 +10,34 @@ class Data(object):
 
     @tornado.gen.coroutine
     def ensure_indexes(self):
-        yield self._coll.ensure_index('username', unique=True)
+        yield self._coll.ensure_index("facebook.id", unique=True)
 
     @tornado.gen.coroutine
-    def get_id(self, username, create_if_not_found=False):
-        """Return the ObjectId associated with the username or None if the
-        username doesn't exist.
+    def get_by_facebook_id(self, facebook_id):
+        doc = yield self._coll.find_one({"facebook.id": facebook_id})
+        raise tornado.gen.Return(doc)
 
-        If 'create_if_not_found' is true then an ID will be created in the
-        database if the username doesn't exist.
-        """
-        doc = yield self._coll.find_one({'username': username})
-        if doc:
-            raise tornado.gen.Return(doc['_id'])
-        elif create_if_not_found:
-            doc_id = ObjectId()
-            yield self._coll.insert({'_id': doc_id, 'username': username})
-            raise tornado.gen.Return(doc_id)
-        else:
-            raise tornado.gen.Return(None)
+    @tornado.gen.coroutine
+    def create_from_facebook_data(self, data):
+        user_id = ObjectId()
+        assert "id" in data
+        assert "name" in data
+        yield self._coll.insert({
+            "_id":          user_id,
+            "facebook":     data,
+            })
+        raise tornado.gen.Return({
+            "id":       user_id,
+            "name":     data["name"],
+            })
 
     @tornado.gen.coroutine
     def get_usernames(self, user_ids):
         """Resolve a list of user IDs to usernames."""
         cursor = self._coll.find(
-            {'_id': {'$in': user_ids}}, {'username': 1})
+            {'_id': {'$in': user_ids}}, {'facebook.name': 1})
         result = yield cursor.to_list(length=10)
-        result = dict([(d['_id'], d['username']) for d in result])
+        result = dict([(d['_id'], d['facebook']["name"]) for d in result])
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine

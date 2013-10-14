@@ -13,6 +13,7 @@ import sundowner.data
 import sys
 import time
 import tornado.gen
+import tornado.httpclient
 import tornado.ioloop
 import tornado.web
 from bson.objectid import ObjectId
@@ -294,6 +295,70 @@ class VotesHandler(RequestHandler):
             raise BadRequestError("'vote' is not a valid vote type.")
 
 
+class UsersHandler(RequestHandler):
+
+    @tornado.gen.coroutine
+    def post(self):
+        """Resolve a Facebook access token to a user ID.
+        
+        If this is the first time that the system has encountered the Facebook
+        user ID associated with the access token then create a new user.
+        """
+
+        payload =           self.get_json_request_body()
+        params = {
+            "access_token": payload.get("access_token"),
+            }
+        self.validate_post_params(params)
+
+        # validate the access token using the Facebook Graph API and at the
+        # same time retrieve data on the user associated with it
+        http_client = tornado.httpclient.AsyncHTTPClient()
+        url = "https://graph.facebook.com/me?access_token=%s" % \
+            params["access_token"]
+        try:
+            response = yield http_client.fetch(url)
+        except tornado.httpclient.HTTPError as e:
+            fb_error = json.loads(e.response.body)
+            if fb_error["error"]["type"] == "OAuthException":
+                raise BadRequestError("'access_token' is not valid.")
+            else:
+                raise e
+        fb_response = json.loads(response.body)
+
+        # attempt to lookup the user in the "users" collection by their
+        # Facebook user ID
+        fb_user_id = fb_response["id"]
+        user_data = yield \
+            sundowner.data.users.get_by_facebook_id(fb_user_id)
+
+        # if no user is found created a new user using the user data retrieved
+        # from Facebook
+        if user_data is None:
+            result = yield \
+                sundowner.data.users.create_from_facebook_data(fb_response)
+            created = True
+
+        # if a user is found extract the native ID and Facebook name
+        else:
+            result = {
+                "id":       user_data["_id"],
+                "name":     user_data["facebook"]["name"],
+                }
+            created = False
+
+        # can't JSON encode ObjectId object
+        result["id"] = str(result["id"])
+
+        status_code = httplib.CREATED if created else httplib.OK
+        self.complete(status_code, data=result)
+
+    def validate_post_params(self, params):
+        access_token = params['access_token']
+        if access_token is None:
+            raise BadRequestError("Missing 'access_token' argument.")
+
+
 # Errors -----------------------------------------------------------------------
 
 class BadRequestError(tornado.web.HTTPError):
@@ -306,15 +371,16 @@ class BadRequestError(tornado.web.HTTPError):
 # Main -------------------------------------------------------------------------
 
 application = tornado.web.Application([
-    (r'/content',   ContentHandler),   # GET, POST
-    (r'/votes',     VotesHandler),     # POST
+    (r"/content",   ContentHandler),    # GET, POST
+    (r"/votes",     VotesHandler),      # POST
+    (r"/users",     UsersHandler),      # POST
     ])
 
 def main():
     try:
         config_filepath = sys.argv[1]
     except IndexError:
-        raise Exception('no config file specified')
+        raise Exception('No config file specified')
     sundowner.config.init(config_filepath)
     sundowner.data.connect()
     application.listen(sundowner.config.cfg['port'])
