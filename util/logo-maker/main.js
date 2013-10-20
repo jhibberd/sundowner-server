@@ -26,6 +26,26 @@ function renderLogo() {
     }
 };
 
+function dot(x, y, ctx, size) {
+
+    var s = parseInt(size * .07);
+    var X = parseInt(size * .21);
+    var Y = parseInt(size * .35);
+
+    ctx.fillStyle = "#888";
+    ctx.fillRect(X + (x * s), Y + (y * s), s, s);
+}
+
+function dot2(x, y, ctx, size) {
+
+    var s = parseInt(size * .04);
+    var X = parseInt(size * .21);
+    var Y = parseInt(size * .65);
+
+    ctx.fillStyle = "#0099CC";
+    ctx.fillRect(X + (x * s), Y + (y * s), s, s);
+}
+
 function drawLogo(size, opaqueBackground) {
 
     var canvas = document.getElementById('canvas');
@@ -36,34 +56,37 @@ function drawLogo(size, opaqueBackground) {
     ctx.canvas.height = size;
 
     // fill background
-    var grd = ctx.createLinearGradient(0, 0, 0, size);
-    grd.addColorStop(1, "#0099CC");
-    grd.addColorStop(0, "#33B5E5");
-    ctx.fillStyle = grd
+    ctx.fillStyle = "#33B5E5"
     ctx.fillRect(0, 0, size, size);
+
+    var margin = size * .2;
 
     // box
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(size * .15, size * .15, size * .7, size * .4);
+    ctx.fillRect(size * .1, size * .2, size * .8, size * .6);
 
-    // callout
-    ctx.beginPath();
-    ctx.moveTo((size / 2) - (size * .09), size * .54);
-    ctx.lineTo((size / 2), size * .64);
-    ctx.lineTo((size / 2) + (size * .09), size * .54);
-    ctx.fill();
+    dot(0, 0, ctx, size);
+    dot(1, 0, ctx, size);
+    dot(2, 0, ctx, size); //
+    dot(3, 0, ctx, size);
+    dot(4, 0, ctx, size); //
+    dot(5, 0, ctx, size);
+    dot(6, 0, ctx, size);
+    dot(7, 0, ctx, size); //
 
-    // circle
-    ctx.fillStyle = "#99CC00";
-    ctx.beginPath();
-    ctx.arc(
-        size / 2, 
-        size * .78, 
-        size * .11, 
-        0, 
-        2 * Math.PI, 
-        false);
-    ctx.fill();
+    dot(0, 2, ctx, size);
+    dot(1, 2, ctx, size); //
+    dot(2, 2, ctx, size);
+    dot(3, 2, ctx, size);
+    dot(4, 2, ctx, size); //
+    dot(5, 2, ctx, size);
+    dot(6, 2, ctx, size);
+    dot(7, 2, ctx, size);
+
+    dot2(0, 0, ctx, size);
+    dot2(1, 0, ctx, size);
+    dot2(2, 0, ctx, size); //
+    dot2(3, 0, ctx, size);
 }
 
 function openLogo() {
