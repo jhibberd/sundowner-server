@@ -5,48 +5,40 @@ function renderLogo() {
     var imageType = list.options[list.selectedIndex].value;
 
     switch (imageType) {
+
         case "iphone":
-            drawLogo(57, true);
+            drawLogo(57);
             break;
         case "iphone_retina":
-            drawLogo(114, true);
+            drawLogo(114);
             break;
+
         case "android_hdpi":
-            drawLogo(72, false);
+            drawLogo(72);
             break;
         case "android_mdpi":
-            drawLogo(48, false);
+            drawLogo(48);
             break;
         case "android_xhdpi":
-            drawLogo(96, false);
+            drawLogo(96);
             break;
         case "android_xxhdpi":
-            drawLogo(144, false);
+            drawLogo(144);
+            break;
+
+        case "facebook_s":
+            drawLogo(16);
+            break;
+        case "facebook_m":
+            drawLogo(75);
+            break;
+        case "facebook_l":
+            drawLogo(128);
             break;
     }
 };
 
-function dot(x, y, ctx, size) {
-
-    var s = parseInt(size * .07);
-    var X = parseInt(size * .21);
-    var Y = parseInt(size * .35);
-
-    ctx.fillStyle = "#888";
-    ctx.fillRect(X + (x * s), Y + (y * s), s, s);
-}
-
-function dot2(x, y, ctx, size) {
-
-    var s = parseInt(size * .04);
-    var X = parseInt(size * .21);
-    var Y = parseInt(size * .65);
-
-    ctx.fillStyle = "#0099CC";
-    ctx.fillRect(X + (x * s), Y + (y * s), s, s);
-}
-
-function drawLogo(size, opaqueBackground) {
+function drawLogo(size) {
 
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
@@ -61,32 +53,25 @@ function drawLogo(size, opaqueBackground) {
 
     var margin = size * .2;
 
-    // box
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(size * .1, size * .2, size * .8, size * .6);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#33B5E5";
 
-    dot(0, 0, ctx, size);
-    dot(1, 0, ctx, size);
-    dot(2, 0, ctx, size); //
-    dot(3, 0, ctx, size);
-    dot(4, 0, ctx, size); //
-    dot(5, 0, ctx, size);
-    dot(6, 0, ctx, size);
-    dot(7, 0, ctx, size); //
+    var cardHeight = parseInt(size * .45);
+    var cardWidth = parseInt(size * (.45 * 1.618)); //.7);
+    var cardOffset = parseInt(size * .05);
 
-    dot(0, 2, ctx, size);
-    dot(1, 2, ctx, size); //
-    dot(2, 2, ctx, size);
-    dot(3, 2, ctx, size);
-    dot(4, 2, ctx, size); //
-    dot(5, 2, ctx, size);
-    dot(6, 2, ctx, size);
-    dot(7, 2, ctx, size);
+    var x = parseInt((size - ((cardOffset *2) + cardWidth)) / 2);
+    var y = parseInt((size - ((cardOffset *2) + cardHeight)) / 2);
 
-    dot2(0, 0, ctx, size);
-    dot2(1, 0, ctx, size);
-    dot2(2, 0, ctx, size); //
-    dot2(3, 0, ctx, size);
+    ctx.fillRect(   x + cardOffset *2, y + cardOffset *2, cardWidth, cardHeight);
+    ctx.strokeRect( x + cardOffset *2, y + cardOffset *2, cardWidth, cardHeight);
+
+    ctx.fillRect(   x + cardOffset *1, y + cardOffset *1, cardWidth, cardHeight);
+    ctx.strokeRect( x + cardOffset *1, y + cardOffset *1, cardWidth, cardHeight);
+
+    ctx.fillRect(   x + cardOffset *0, y + cardOffset *0, cardWidth, cardHeight);
+    ctx.strokeRect( x + cardOffset *0, y + cardOffset *0, cardWidth, cardHeight);
 }
 
 function openLogo() {
