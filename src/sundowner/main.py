@@ -18,7 +18,9 @@ import tornado.ioloop
 import tornado.web
 from bson.objectid import ObjectId
 from operator import itemgetter
+from sundowner import validate
 from sundowner.data.votes import Vote
+from sundowner.error import BadRequestError
 
 
 # Helpers ----------------------------------------------------------------------
@@ -72,16 +74,6 @@ class RequestHandler(tornado.web.RequestHandler):
 
 # Handlers ---------------------------------------------------------------------
 
-# constants for request argument validation
-MIN_LNG =       -180 
-MAX_LNG =       180
-MIN_LAT =       -90
-MAX_LAT =       90
-MAX_TEXT_LEN =  256
-
-# http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
-MAX_URL_LEN =   2048
-
 class ContentHandler(RequestHandler):
 
     @tornado.gen.coroutine
@@ -92,10 +84,11 @@ class ContentHandler(RequestHandler):
             'lng':      self.get_argument('lng'),
             'lat':      self.get_argument('lat'),
             }
-        yield self.validate_get_params(params)
+        validate.ContentHandlerValidator().validate_get(params)
 
         # get all nearby content
-        top_content = yield sundowner.data.content.get_nearby(params['lng'], params['lat'])
+        top_content = yield sundowner.data.content.get_nearby(
+            params['lng'], params['lat'])
 
         # replace user IDs with usernames
         user_ids = map(itemgetter('user_id'), top_content)
@@ -125,7 +118,7 @@ class ContentHandler(RequestHandler):
             'accuracy':     payload.get('accuracy'),
             'url':          payload.get('url'),
             }
-        yield self.validate_post_params(params)
+        yield validate.ContentHandlerValidator().validate_post(params)
 
         yield sundowner.data.content.put({
             'text':             params['text'],
@@ -149,102 +142,6 @@ class ContentHandler(RequestHandler):
             })
         self.complete(httplib.CREATED)
 
-    @tornado.gen.coroutine
-    def validate_get_params(self, params):
-
-        lng = params['lng']
-        if lng is None:
-            raise BadRequestError("Missing 'lng' argument.")
-        try:
-            lng = float(lng)
-        except ValueError:
-            raise BadRequestError("'lng' must be a float.") 
-        if not (MIN_LNG <= lng <= MAX_LNG):
-            raise BadRequestError("'lng' is not a valid longitude.") 
-        params['lng'] = lng
-
-        lat = params['lat']
-        if lat is None:
-            raise BadRequestError("Missing 'lat' argument.")
-        try:
-            lat = float(lat)
-        except ValueError:
-            raise BadRequestError("'lat' must be a float.") 
-        if not (MIN_LAT <= lat <= MAX_LAT):
-            raise BadRequestError("'lat' is not a valid latitude.") 
-        params['lat'] = lat
-
-    @tornado.gen.coroutine
-    def validate_post_params(self, params):
-
-        lng = params['lng']
-        if lng is None:
-            raise BadRequestError("Missing 'lng' argument.")
-        try:
-            lng = float(lng)
-        except ValueError:
-            raise BadRequestError("'lng' must be a float.") 
-        if not (MIN_LNG <= lng <= MAX_LNG):
-            raise BadRequestError("'lng' is not a valid longitude.") 
-        params['lng'] = lng
-
-        lat = params['lat']
-        if lat is None:
-            raise BadRequestError("Missing 'lat' argument.")
-        try:
-            lat = float(lat)
-        except ValueError:
-            raise BadRequestError("'lat' must be a float.") 
-        if not (MIN_LAT <= lat <= MAX_LAT):
-            raise BadRequestError("'lat' is not a valid latitude.") 
-        params['lat'] = lat
-
-        text = params['text']
-        if text is None:
-            raise BadRequestError("Missing 'text' argument.")
-        if not isinstance(text, basestring):
-            raise BadRequestError("'text' must be a string.")
-        text = text.strip()
-        if len(text) == 0:
-            raise BadRequestError("'text' cannot be empty.")
-        if len(text) > MAX_TEXT_LEN:
-            raise BadRequestError(
-                "'text' cannot exceed %s characters." % MAX_TEXT_LEN)
-        params['text'] = text
-
-        user_id = params['user_id']
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        if not (yield sundowner.data.users.exists(user_id)):
-            raise BadRequestError("'user_id' does not exist.")
-
-        accuracy = params['accuracy']
-        if accuracy is not None:
-            try:
-                accuracy = float(accuracy)
-            except ValueError:
-                raise BadRequestError("'accuracy' is not a valid radius.")
-            # iOS supplied accuracy as a negative value if it's invalid
-            if accuracy < 0:
-                accuracy = None
-            params['accuracy'] = accuracy
-        
-        url = params['url']
-        if url is not None:
-            if not isinstance(url, basestring):
-                raise BadRequestError("'url' must be a string.")
-            url = url.strip()
-            if len(url) == 0:
-                raise BadRequestError("'url' cannot be empty.")
-            if len(url) > MAX_URL_LEN:
-                raise BadRequestError(
-                    "'url' cannot exceed %s characters." % MAX_URL_LEN)
-            # currently no regex validation or HTTP checking validation is
-            # performed on the URL
-            params['url'] = url
-
 
 class VotesHandler(RequestHandler):
 
@@ -258,41 +155,17 @@ class VotesHandler(RequestHandler):
             'user_id':      payload.get('user_id'),
             'vote':         payload.get('vote'),
             }
-        yield self.validate_get_params(params)
+        yield validate.VotesHandlerValidator().validate_get(params)
 
         accepted = yield sundowner.data.votes.put(
             params['user_id'], params['content_id'], params['vote'])
         if accepted:
-            yield sundowner.data.content.inc_vote(params['content_id'], params['vote'])
+            yield sundowner.data.content.inc_vote(
+                params['content_id'], params['vote'])
             # otherwise the vote has already been places
 
         status_code = httplib.CREATED if accepted else httplib.OK
         self.complete(status_code)
-
-    @tornado.gen.coroutine
-    def validate_get_params(self, params):
-
-        content_id = params['content_id']
-        if content_id is None:
-            raise BadRequestError("Missing 'content_id' argument.")
-        if not ObjectId.is_valid(content_id):
-            raise BadRequestError("'content_id' is not a valid ID.")
-        if not (yield sundowner.data.content.exists(content_id)):
-            raise BadRequestError("'content_id' does not exist.")
-
-        user_id = params['user_id']
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        if not (yield sundowner.data.users.exists(user_id)):
-            raise BadRequestError("'user_id' does not exist.")
-
-        vote = params['vote']
-        if vote is None:
-            raise BadRequestError("Missing 'vote' argument.")
-        if vote not in [Vote.UP, Vote.DOWN]:
-            raise BadRequestError("'vote' is not a valid vote type.")
 
 
 class UsersHandler(RequestHandler):
@@ -309,7 +182,7 @@ class UsersHandler(RequestHandler):
         params = {
             "access_token": payload.get("access_token"),
             }
-        self.validate_post_params(params)
+        validate.UsersHandlerValidator().validate_post(params)
 
         # validate the access token using the Facebook Graph API and at the
         # same time retrieve data on the user associated with it
@@ -352,20 +225,6 @@ class UsersHandler(RequestHandler):
 
         status_code = httplib.CREATED if created else httplib.OK
         self.complete(status_code, data=result)
-
-    def validate_post_params(self, params):
-        access_token = params['access_token']
-        if access_token is None:
-            raise BadRequestError("Missing 'access_token' argument.")
-
-
-# Errors -----------------------------------------------------------------------
-
-class BadRequestError(tornado.web.HTTPError):
-
-    def __init__(self, message):
-        super(BadRequestError, self).__init__(httplib.BAD_REQUEST)
-        self.message = message
 
 
 # Main -------------------------------------------------------------------------
