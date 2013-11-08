@@ -1,1 +1,9 @@
-All three endpoints can sustain throughput of roughly 80 requests per second.
+
+* All three endpoints can sustain throughput of roughly 80 requests per second.
+
+* Before testing the following doc needs to be created:
+  db.users.save({"_id": ObjectId("aaaaaaaaaaaaaaaaaaaaaaaa"), "facebook": {"name": "John Smith"}})
+
+* Since implementing in-memory sorting the performance of Content/GET has 
+  dropped from 80rps to 70rps
+
