@@ -94,7 +94,7 @@ class ContentHandler(RequestHandler):
         # refine sort order be performing secondary, in-memory sort using
         # additional content attributes
         top_content = memsort.sort(params["lng"], params["lat"], top_content)
-        top_content = top_content[self._RESULT_SIZE]
+        top_content = top_content[:self._RESULT_SIZE]
 
         # replace user IDs with usernames
         user_ids = map(itemgetter("user_id"), top_content)
