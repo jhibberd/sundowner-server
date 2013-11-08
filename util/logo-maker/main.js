@@ -36,7 +36,7 @@ function renderLogo() {
             drawLogo(128);
             break;
         case "facebook_pp":
-            drawLogo(160);
+            drawLogo(180);
             break;
     }
 };
