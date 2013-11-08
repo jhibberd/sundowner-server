@@ -26,14 +26,17 @@ function renderLogo() {
             drawLogo(144);
             break;
 
-        case "facebook_s":
+        case "facebook_app_s":
             drawLogo(16);
             break;
-        case "facebook_m":
+        case "facebook_app_m":
             drawLogo(75);
             break;
-        case "facebook_l":
+        case "facebook_app_l":
             drawLogo(128);
+            break;
+        case "facebook_pp":
+            drawLogo(160);
             break;
     }
 };
