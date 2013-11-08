@@ -9,6 +9,8 @@ from bson.objectid import ObjectId
 from sundowner.data.votes import Vote
 
 
+_BATCH_SIZE = 100
+
 class Data(object):
 
     QUERY_RADIUS =  1000    # meters (used by ranking module)
@@ -46,8 +48,8 @@ class Data(object):
             }
 
         # NOTE I'm not sure whether it's necessary to apply a 'limit' twice
-        cursor = self._coll.find(spec).limit(10)
-        result = yield cursor.to_list(length=10)
+        cursor = self._coll.find(spec).limit(_BATCH_SIZE)
+        result = yield cursor.to_list(length=_BATCH_SIZE)
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine

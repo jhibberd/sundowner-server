@@ -1,3 +1,4 @@
+'''
 import datetime
 import sundowner.data.content
 from math import radians, cos, sin, asin, sqrt
@@ -206,4 +207,4 @@ def _add_proximity_data(content_list, prep_target_vector):
             }
 
     map(f, content_list)
-
+'''

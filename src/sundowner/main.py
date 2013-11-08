@@ -18,7 +18,7 @@ import tornado.ioloop
 import tornado.web
 from bson.objectid import ObjectId
 from operator import itemgetter
-from sundowner import validate
+from sundowner import memsort, validate
 from sundowner.data.votes import Vote
 from sundowner.error import BadRequestError
 
@@ -76,32 +76,38 @@ class RequestHandler(tornado.web.RequestHandler):
 
 class ContentHandler(RequestHandler):
 
+    _RESULT_SIZE = 10
     @tornado.gen.coroutine
     def get(self):
         """Return top content near a location."""
 
         params = {
-            'lng':      self.get_argument('lng'),
-            'lat':      self.get_argument('lat'),
+            "lng":      self.get_argument("lng"),
+            "lat":      self.get_argument("lat"),
             }
         validate.ContentHandlerValidator().validate_get(params)
 
         # get all nearby content
         top_content = yield sundowner.data.content.get_nearby(
-            params['lng'], params['lat'])
+            params["lng"], params["lat"])
+
+        # refine sort order be performing secondary, in-memory sort using
+        # additional content attributes
+        top_content = memsort.sort(params["lng"], params["lat"], top_content)
+        top_content = top_content[self._RESULT_SIZE]
 
         # replace user IDs with usernames
-        user_ids = map(itemgetter('user_id'), top_content)
+        user_ids = map(itemgetter("user_id"), top_content)
         username_map = yield sundowner.data.users.get_usernames(user_ids)
 
         result = []
         for content in top_content:
-            username = username_map[content['user_id']]
+            username = username_map[content["user_id"]]
             result.append({
-                'id':           str(content['_id']),
-                'text':         content['text'],
-                'url':          content['url'],
-                'username':     username,
+                "id":           str(content["_id"]),
+                "text":         content["text"],
+                "url":          content["url"],
+                "username":     username,
                 })
         self.complete(data=result)
 
@@ -111,33 +117,33 @@ class ContentHandler(RequestHandler):
 
         payload =           self.get_json_request_body()
         params = {
-            'lng':          payload.get('lng'),
-            'lat':          payload.get('lat'),
-            'text':         payload.get('text'),
-            'user_id':      payload.get('user_id'),
-            'accuracy':     payload.get('accuracy'),
-            'url':          payload.get('url'),
+            "lng":          payload.get("lng"),
+            "lat":          payload.get("lat"),
+            "text":         payload.get("text"),
+            "user_id":      payload.get("user_id"),
+            "accuracy":     payload.get("accuracy"),
+            "url":          payload.get("url"),
             }
         yield validate.ContentHandlerValidator().validate_post(params)
 
         yield sundowner.data.content.put({
-            'text':             params['text'],
-            'url':              params['url'],
-            'user_id':          params['user_id'],
-            'accuracy':         params['accuracy'], # meters
-            'loc': {
-                'type':         'Point',
-                'coordinates':  [params['lng'], params['lat']],
+            "text":             params["text"],
+            "url":              params["url"],
+            "user_id":          params["user_id"],
+            "accuracy":         params["accuracy"], # meters
+            "loc": {
+                "type":         "Point",
+                "coordinates":  [params["lng"], params["lat"]],
                 },
-            'votes': {
-                'up':           0,
-                'down':         0,
+            "votes": {
+                "up":           0,
+                "down":         0,
                 },
-            'score': {
-                'overall':      0,
-                'vote':         0,
-                'day_offset':   0,
-                'week_offset':  0,
+            "score": {
+                "overall":      0,
+                "vote":         0,
+                "day_offset":   0,
+                "week_offset":  0,
                 },
             })
         self.complete(httplib.CREATED)
