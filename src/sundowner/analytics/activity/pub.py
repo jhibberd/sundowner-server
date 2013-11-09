@@ -65,13 +65,3 @@ class _Verb(object):
     LIKE =      "like"
     DISLIKE =   "dislike"
 
-
-# Test -------------------------------------------------------------------------
-
-ap = ActivityPub()
-while True:
-    ap.write_user_create_content("james", "book")
-    ap.write_user_view_content("james", 1, 1)
-    ap.write_user_like_content("james", "book")
-    ap.write_user_dislike_content("james", "book")
-
