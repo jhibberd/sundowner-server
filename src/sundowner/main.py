@@ -19,6 +19,7 @@ import tornado.web
 from bson.objectid import ObjectId
 from operator import itemgetter
 from sundowner import memsort, validate
+from sundowner.analytics.activity.pub import ActivityPub
 from sundowner.data.votes import Vote
 from sundowner.error import BadRequestError
 
@@ -81,19 +82,20 @@ class ContentHandler(RequestHandler):
     def get(self):
         """Return top content near a location."""
 
-        params = {
+        args = {
             "lng":      self.get_argument("lng"),
             "lat":      self.get_argument("lat"),
+            "user_id":  self.get_argument("user_id"),
             }
-        validate.ContentHandlerValidator().validate_get(params)
+        validate.ContentHandlerValidator().validate_get(args)
 
         # get all nearby content
         top_content = yield sundowner.data.content.get_nearby(
-            params["lng"], params["lat"])
+            args["lng"], args["lat"])
 
         # refine sort order be performing secondary, in-memory sort using
         # additional content attributes
-        top_content = memsort.sort(params["lng"], params["lat"], top_content)
+        top_content = memsort.sort(args["lng"], args["lat"], top_content)
         top_content = top_content[:self._RESULT_SIZE]
 
         # replace user IDs with usernames
@@ -109,6 +111,11 @@ class ContentHandler(RequestHandler):
                 "url":          content["url"],
                 "username":     username,
                 })
+
+        # write activity
+        self.settings["activity_pub"].write_user_view_content(
+            args["user_id"], args["lng"], args["lat"])
+
         self.complete(data=result)
 
     @tornado.gen.coroutine
@@ -116,7 +123,7 @@ class ContentHandler(RequestHandler):
         """Save content to the database."""
 
         payload =           self.get_json_request_body()
-        params = {
+        args = {
             "lng":          payload.get("lng"),
             "lat":          payload.get("lat"),
             "text":         payload.get("text"),
@@ -124,16 +131,18 @@ class ContentHandler(RequestHandler):
             "accuracy":     payload.get("accuracy"),
             "url":          payload.get("url"),
             }
-        yield validate.ContentHandlerValidator().validate_post(params)
+        yield validate.ContentHandlerValidator().validate_post(args)
 
+        content_id = ObjectId()
         yield sundowner.data.content.put({
-            "text":             params["text"],
-            "url":              params["url"],
-            "user_id":          params["user_id"],
-            "accuracy":         params["accuracy"], # meters
+            "_id":              content_id, 
+            "text":             args["text"],
+            "url":              args["url"],
+            "user_id":          args["user_id"],
+            "accuracy":         args["accuracy"], # meters
             "loc": {
                 "type":         "Point",
-                "coordinates":  [params["lng"], params["lat"]],
+                "coordinates":  [args["lng"], args["lat"]],
                 },
             "votes": {
                 "up":           0,
@@ -146,6 +155,11 @@ class ContentHandler(RequestHandler):
                 "week_offset":  0,
                 },
             })
+
+        # write activity
+        self.settings["activity_pub"].write_user_create_content(
+            args["user_id"], content_id)
+
         self.complete(httplib.CREATED)
 
 
@@ -156,19 +170,27 @@ class VotesHandler(RequestHandler):
         """Register a vote up or down against a piece of content."""
 
         payload =           self.get_json_request_body()
-        params = {
-            'content_id':   payload.get('content_id'),
-            'user_id':      payload.get('user_id'),
-            'vote':         payload.get('vote'),
+        args = {
+            "content_id":   payload.get("content_id"),
+            "user_id":      payload.get("user_id"),
+            "vote":         payload.get("vote"),
             }
-        yield validate.VotesHandlerValidator().validate_get(params)
+        yield validate.VotesHandlerValidator().validate_get(args)
 
         accepted = yield sundowner.data.votes.put(
-            params['user_id'], params['content_id'], params['vote'])
+            args["user_id"], args["content_id"], args["vote"])
         if accepted:
             yield sundowner.data.content.inc_vote(
-                params['content_id'], params['vote'])
+                args["content_id"], args["vote"])
             # otherwise the vote has already been places
+
+        # write activity
+        if args["vote"] == Vote.UP:
+            self.settings["activity_pub"].write_user_like_content(
+                args["user_id"], args["content_id"])
+        else: # already validated so only logical alternative
+            self.settings["activity_pub"].write_user_dislike_content(
+                args["user_id"], args["content_id"])
 
         status_code = httplib.CREATED if accepted else httplib.OK
         self.complete(status_code)
@@ -185,16 +207,16 @@ class UsersHandler(RequestHandler):
         """
 
         payload =           self.get_json_request_body()
-        params = {
+        args = {
             "access_token": payload.get("access_token"),
             }
-        validate.UsersHandlerValidator().validate_post(params)
+        validate.UsersHandlerValidator().validate_post(args)
 
         # validate the access token using the Facebook Graph API and at the
         # same time retrieve data on the user associated with it
         http_client = tornado.httpclient.AsyncHTTPClient()
         url = "https://graph.facebook.com/me?access_token=%s" % \
-            params["access_token"]
+            args["access_token"]
         try:
             response = yield http_client.fetch(url)
         except tornado.httpclient.HTTPError as e:
@@ -235,19 +257,21 @@ class UsersHandler(RequestHandler):
 
 # Main -------------------------------------------------------------------------
 
-application = tornado.web.Application([
-    (r"/content",   ContentHandler),    # GET, POST
-    (r"/votes",     VotesHandler),      # POST
-    (r"/users",     UsersHandler),      # POST
-    ])
-
 def main():
+
     try:
         config_filepath = sys.argv[1]
     except IndexError:
         raise Exception('No config file specified')
     sundowner.config.init(config_filepath)
     sundowner.data.connect()
+
+    application = tornado.web.Application([
+        (r"/content",   ContentHandler),    # GET, POST
+        (r"/votes",     VotesHandler),      # POST
+        (r"/users",     UsersHandler),      # POST
+        ], 
+        activity_pub=ActivityPub())
     application.listen(sundowner.config.cfg['port'])
     tornado.ioloop.IOLoop.instance().start()
 

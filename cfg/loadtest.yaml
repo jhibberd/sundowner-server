@@ -1,2 +1,3 @@
-port:       8052
-database:   sundowner_loadtest
+port:                   8052
+database:               sundowner_loadtest
+database-analytics:     sundowner_analytics

@@ -1,2 +1,3 @@
-port:       8050
-database:   sundowner_sandbox
+port:                   8050
+database:               sundowner_sandbox
+database-analytics:     sundowner_analytics

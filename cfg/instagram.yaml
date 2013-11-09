@@ -1,2 +1,3 @@
-port:       8051
-database:   sundowner_instagram
+port:                   8051
+database:               sundowner_instagram
+database-analytics:     sundowner_analytics
