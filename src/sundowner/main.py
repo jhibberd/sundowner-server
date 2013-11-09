@@ -87,7 +87,7 @@ class ContentHandler(RequestHandler):
             "lat":      self.get_argument("lat"),
             "user_id":  self.get_argument("user_id"),
             }
-        validate.ContentHandlerValidator().validate_get(args)
+        yield validate.ContentHandlerValidator().validate_get(args)
 
         # get all nearby content
         top_content = yield sundowner.data.content.get_nearby(

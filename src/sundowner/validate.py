@@ -16,6 +16,7 @@ from sundowner.error import BadRequestError
 
 class ContentHandlerValidator(object):
 
+    @tornado.gen.coroutine
     def validate_get(self, args):
 
         lng = args['lng']
