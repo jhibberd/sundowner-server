@@ -3,10 +3,10 @@ them to the database.
 """
 
 import json
+import sundowner.config
 import sys
 import zmq
 from sundowner.analytics.activity.store import ActivityStore
-from sundowner.config
 
 
 # NOTE If a subscriber is processing the messages at a slower rate than the
