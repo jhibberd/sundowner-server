@@ -3,8 +3,10 @@ them to the database.
 """
 
 import json
+import sys
 import zmq
 from sundowner.analytics.activity.store import ActivityStore
+from sundowner.config
 
 
 # NOTE If a subscriber is processing the messages at a slower rate than the
@@ -32,5 +34,13 @@ class ActivitySub(object):
 
 
 if __name__ == "__main__":
+
+    # init config
+    try:
+        config_filepath = sys.argv[1]
+    except IndexError:
+        raise Exception('No config file specified')
+    sundowner.config.init(config_filepath)
+
     ActivitySub.run()
 
