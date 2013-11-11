@@ -12,6 +12,15 @@ function renderLogo() {
         case "iphone_retina":
             drawLogo(114, 114);
             break;
+        case "iphone_appstore":
+            drawLogo(1024, 1024);
+            break;
+        case "iphone_app_120x120":
+            drawLogo(120, 120);
+            break;
+        case "iphone_launch":
+            drawLogo(640, 1136);
+            break;
 
         case "android_hdpi":
             drawLogo(72, 72);
