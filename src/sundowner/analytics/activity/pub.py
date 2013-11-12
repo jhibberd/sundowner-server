@@ -10,28 +10,29 @@ class ActivityPub(object):
     # Convenience Methods ------------------------------------------------------
 
     def write_user_create_content(self, user_id, content_id):
-        self._write_activity(user_id, _Verb.CREATE, {
+        self._write_activity(user_id, Verb.CREATE, {
             "content_id": content_id,
             })
 
     def write_user_view_content(self, user_id, lng, lat):
-        self._write_activity(user_id, _Verb.VIEW, {
+        self._write_activity(user_id, Verb.VIEW, {
             "lng": lng,
             "lat": lat,
             })
 
     def write_user_like_content(self, user_id, content_id):
-        self._write_activity(user_id, _Verb.LIKE, {
+        self._write_activity(user_id, Verb.LIKE, {
             "content_id": content_id,
             })
 
     def write_user_dislike_content(self, user_id, content_id):
-        self._write_activity(user_id, _Verb.DISLIKE, {
+        self._write_activity(user_id, Verb.DISLIKE, {
             "content_id": content_id,
             })
 
     # --------------------------------------------------------------------------
 
+    # TODO do we not need to use the 0MQ tornado loop here?
     def _get_conn(self):
         """Return on-demand connection to 0MQ socket."""
         if not hasattr(self, "_conn"):
@@ -59,7 +60,7 @@ class ActivityPub(object):
             print e
 
 
-class _Verb(object):
+class Verb(object):
     CREATE =    "created"
     VIEW =      "view"
     LIKE =      "like"

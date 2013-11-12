@@ -19,7 +19,7 @@ class ContentHandlerValidator(object):
     @tornado.gen.coroutine
     def validate_get(self, args):
 
-        lng = args['lng']
+        lng = args["lng"]
         if lng is None:
             raise BadRequestError("Missing 'lng' argument.")
         try:
@@ -28,9 +28,9 @@ class ContentHandlerValidator(object):
             raise BadRequestError("'lng' must be a float.") 
         if not (MIN_LNG <= lng <= MAX_LNG):
             raise BadRequestError("'lng' is not a valid longitude.") 
-        args['lng'] = lng
+        args["lng"] = lng
 
-        lat = args['lat']
+        lat = args["lat"]
         if lat is None:
             raise BadRequestError("Missing 'lat' argument.")
         try:
@@ -39,20 +39,22 @@ class ContentHandlerValidator(object):
             raise BadRequestError("'lat' must be a float.") 
         if not (MIN_LAT <= lat <= MAX_LAT):
             raise BadRequestError("'lat' is not a valid latitude.") 
-        args['lat'] = lat
+        args["lat"] = lat
 
-        user_id = args['user_id']
+        user_id = args["user_id"]
         if user_id is None:
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
+        user_id = ObjectId(user_id)
         if not (yield sundowner.data.users.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
+        args["user_id"] = user_id
 
     @tornado.gen.coroutine
     def validate_post(self, args):
 
-        lng = args['lng']
+        lng = args["lng"]
         if lng is None:
             raise BadRequestError("Missing 'lng' argument.")
         try:
@@ -61,9 +63,9 @@ class ContentHandlerValidator(object):
             raise BadRequestError("'lng' must be a float.") 
         if not (MIN_LNG <= lng <= MAX_LNG):
             raise BadRequestError("'lng' is not a valid longitude.") 
-        args['lng'] = lng
+        args["lng"] = lng
 
-        lat = args['lat']
+        lat = args["lat"]
         if lat is None:
             raise BadRequestError("Missing 'lat' argument.")
         try:
@@ -72,9 +74,9 @@ class ContentHandlerValidator(object):
             raise BadRequestError("'lat' must be a float.") 
         if not (MIN_LAT <= lat <= MAX_LAT):
             raise BadRequestError("'lat' is not a valid latitude.") 
-        args['lat'] = lat
+        args["lat"] = lat
 
-        text = args['text']
+        text = args["text"]
         if text is None:
             raise BadRequestError("Missing 'text' argument.")
         if not isinstance(text, basestring):
@@ -85,17 +87,19 @@ class ContentHandlerValidator(object):
         if len(text) > MAX_TEXT_LEN:
             raise BadRequestError(
                 "'text' cannot exceed %s characters." % MAX_TEXT_LEN)
-        args['text'] = text
+        args["text"] = text
 
-        user_id = args['user_id']
+        user_id = args["user_id"]
         if user_id is None:
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
+        user_id = ObjectId(user_id)
         if not (yield sundowner.data.users.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
+        args["user_id"] = user_id
 
-        accuracy = args['accuracy']
+        accuracy = args["accuracy"]
         if accuracy is not None:
             try:
                 accuracy = float(accuracy)
@@ -104,9 +108,9 @@ class ContentHandlerValidator(object):
             # iOS supplied accuracy as a negative value if it's invalid
             if accuracy < 0:
                 accuracy = None
-            args['accuracy'] = accuracy
+            args["accuracy"] = accuracy
         
-        url = args['url']
+        url = args["url"]
         if url is not None:
             if not isinstance(url, basestring):
                 raise BadRequestError("'url' must be a string.")
@@ -118,7 +122,7 @@ class ContentHandlerValidator(object):
                     "'url' cannot exceed %s characters." % MAX_URL_LEN)
             # currently no regex validation or HTTP checking validation is
             # performed on the URL
-            args['url'] = url
+            args["url"] = url
 
 
 class VotesHandlerValidator(object):
@@ -126,23 +130,27 @@ class VotesHandlerValidator(object):
     @tornado.gen.coroutine
     def validate_get(self, args):
 
-        content_id = args['content_id']
+        content_id = args["content_id"]
         if content_id is None:
             raise BadRequestError("Missing 'content_id' argument.")
         if not ObjectId.is_valid(content_id):
             raise BadRequestError("'content_id' is not a valid ID.")
+        content_id = ObjectId(content_id)
         if not (yield sundowner.data.content.exists(content_id)):
             raise BadRequestError("'content_id' does not exist.")
+        args["content_id"]
 
-        user_id = args['user_id']
+        user_id = args["user_id"]
         if user_id is None:
             raise BadRequestError("Missing 'user_id' argument.")
         if not ObjectId.is_valid(user_id):
             raise BadRequestError("'user_id' is not a valid ID.")
+        user_id = ObjectId(user_id)
         if not (yield sundowner.data.users.exists(user_id)):
             raise BadRequestError("'user_id' does not exist.")
+        args["user_id"]
 
-        vote = args['vote']
+        vote = args["vote"]
         if vote is None:
             raise BadRequestError("Missing 'vote' argument.")
         if vote not in [Vote.UP, Vote.DOWN]:

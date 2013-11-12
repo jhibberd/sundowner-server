@@ -45,6 +45,6 @@ class Data(object):
         """Return whether a user ID exists."""
         # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
         count = yield self._coll.find(
-            {'_id': ObjectId(user_id)}, {'_id': 1}).limit(1).count()
+            {'_id': user_id}, {'_id': 1}).limit(1).count()
         raise tornado.gen.Return(count == 1)
 

@@ -1,11 +1,12 @@
 import pymongo
 import pymongo.errors
 import tornado.gen
-from bson.objectid import ObjectId
+
 
 class Vote(object):
     DOWN =  0
     UP =    1
+
 
 class Data(object):
 
@@ -29,8 +30,8 @@ class Data(object):
         """
         try:
             yield self._coll.insert({
-                'user_id':      ObjectId(user_id),
-                'content_id':   ObjectId(content_id),
+                'user_id':      user_id,
+                'content_id':   content_id,
                 'vote':         vote,
                 })
         except pymongo.errors.DuplicateKeyError:

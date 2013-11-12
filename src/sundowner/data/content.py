@@ -5,7 +5,6 @@ content.
 import pymongo
 import time
 import tornado.gen
-from bson.objectid import ObjectId
 from sundowner.data.votes import Vote
 
 
@@ -55,7 +54,6 @@ class Data(object):
     @tornado.gen.coroutine
     def put(self, content):
         """Save new content to the database."""
-        content['user_id'] = ObjectId(content['user_id'])
         content['created'] = long(time.time())
         yield self._coll.insert(content)
 
@@ -65,13 +63,13 @@ class Data(object):
         assert vote in [Vote.UP, Vote.DOWN]
         field = 'votes.up' if vote == Vote.UP else 'votes.down'
         yield self._coll.update(
-            {'_id': ObjectId(content_id)}, {'$inc': {field: 1}}) 
+            {'_id': content_id}, {'$inc': {field: 1}}) 
 
     @tornado.gen.coroutine
     def exists(self, content_id):
         """Return whether a content ID exists."""
         # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
         count = yield self._coll.find(
-            {'_id': ObjectId(content_id)}, {'_id': 1}).limit(1).count()
+            {'_id': content_id}, {'_id': 1}).limit(1).count()
         raise tornado.gen.Return(count == 1)
 
