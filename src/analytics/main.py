@@ -57,11 +57,19 @@ class ActivityStore(object):
                     activity["subject"]["lng"], 
                     activity["subject"]["lat"])
 
+            # format location
+            if activity["verb"] == Verb.VIEW:
+                location["lat"] = activity["subject"]["lat"]
+                location["lng"] = activity["subject"]["lng"]
+            else:
+                location = None
+
             result.append({
                 "time":     time,
                 "actor":    actor,
                 "verb":     verb,
                 "subject":  subject,
+                "location": location,
                 })
 
         raise tornado.gen.Return(result)

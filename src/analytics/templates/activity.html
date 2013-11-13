@@ -15,6 +15,7 @@
                         <th>Actor</th>
                         <th>Verb</th>
                         <th>Subject</th>
+                        <th>Location</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -24,6 +25,13 @@
                         <td>{{ a["actor"] }}</td>
                         <td>{{ a["verb"] }}</td>
                         <td>{{ a["subject"] }}</td>
+                        <td>
+                            {% if a["location"] %}
+                                <a target="_blank" href="http://maps.google.com/maps?q={{ a["location"]["lat"] }},{{ a["location"]["lng"] }}">Location</a>
+                            {% else %}
+                                <em>None</em>
+                            {% end %}
+                        </td>
                     </tr>
                     {% end %}
                 </tbody>
