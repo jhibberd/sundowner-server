@@ -11,8 +11,8 @@ class ActivityStore(object):
 
     _BATCH_SIZE = 10
 
-    @tornado.gen.coroutine
     @classmethod
+    @tornado.gen.coroutine
     def get(cls, db_conn):
 
         db_analytics =  db_conn["sundowner_analytics"]
