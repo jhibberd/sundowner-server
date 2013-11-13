@@ -35,6 +35,16 @@ function renderLogo() {
             drawLogo(144, 144, false);
             break;
 
+        case "googleplay_512x512":
+            drawLogo(512, 512, false);
+            break;
+        case "googleplay_1024x500":
+            drawLogo(1024, 500, true);
+            break;
+        case "googleplay_180x120":
+            drawLogo(180, 120, true);
+            break;
+
         case "facebook_app_16x16":
             drawLogo(16, 16, false);
             break;
