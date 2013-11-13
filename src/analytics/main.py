@@ -33,7 +33,7 @@ class ActivityStore(object):
             # augment subject data (if available)
             if activity["verb"] in [Verb.CREATE, Verb.LIKE, Verb.DISLIKE]:
                 activity["subject_data"] = \
-                    yield db_primary.conf.find_one(
+                    yield db_primary.content.find_one(
                         {"_id": activity["subject"]["content_id"]}) 
 
             # format time
