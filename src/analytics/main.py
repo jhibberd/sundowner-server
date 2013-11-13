@@ -18,6 +18,7 @@ class ActivityStore(object):
         db_analytics =  db_conn["sundowner_analytics"]
         db_primary =    db_conn["sundowner_sandbox"]
 
+        result = []
         cursor = db_analytics.actvity.find(spec).limit(cls._BATCH_SIZE)
         while (yield cursor.fetch_next):
             activity = cursor.next_object()
@@ -52,12 +53,14 @@ class ActivityStore(object):
             else:
                 subject = "%s, %s" % (subject["lng"], subject["lat"])
 
-            yield {
+            result.append({
                 "time":     time,
                 "actor":    actor,
                 "verb":     verb,
                 "subject":  subject,
-                }
+                })
+
+        raise tornado.gen.Return(result)
 
     @staticmethod
     def _fmt_timestamp(ts):
