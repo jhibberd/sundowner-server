@@ -59,8 +59,10 @@ class ActivityStore(object):
 
             # format location
             if activity["verb"] == Verb.VIEW:
-                location["lat"] = activity["subject"]["lat"]
-                location["lng"] = activity["subject"]["lng"]
+                location = {
+                    "lat":  activity["subject"]["lat"],
+                    "lng":  activity["subject"]["lng"],
+                    }
             else:
                 location = None
 
