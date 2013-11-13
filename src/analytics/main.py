@@ -20,7 +20,7 @@ class ActivityStore(object):
         db_primary =    db_conn["sundowner_sandbox"]
 
         result = []
-        cursor = db_analytics.actvity.find()
+        cursor = db_analytics.activity.find()
         cursor.sort([("_id", pymongo.DESCENDING)]).limit(cls._BATCH_SIZE)
         while (yield cursor.fetch_next):
             activity = cursor.next_object()
@@ -31,7 +31,7 @@ class ActivityStore(object):
                     {"_id": activity["actor"]}) 
 
             # augment subject data (if available)
-            if activity["verb"] in [verb.CREATE, verb.LIKE, verb.DISLIKE]:
+            if activity["verb"] in [Verb.CREATE, Verb.LIKE, Verb.DISLIKE]:
                 activity["subject_data"] = \
                     yield db_primary.conf.find_one(
                         {"_id": activity["subject"]["content_id"]}) 
@@ -47,7 +47,7 @@ class ActivityStore(object):
             verb = activity["verb"] 
 
             # format subject
-            if activity["verb"] in [verb.CREATE, verb.LIKE, verb.DISLIKE]:
+            if activity["verb"] in [Verb.CREATE, Verb.LIKE, Verb.DISLIKE]:
                 subject = "\"%s\" by %s (%s)" % (
                     activity["subject_data"]["text"],
                     activity["actor_data"]["facebook"]["name"],
