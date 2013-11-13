@@ -2,11 +2,11 @@
 them to the database.
 """
 
-import json
 import sundowner.config
 import sys
 import zmq
 from sundowner.analytics.activity.store import ActivityStore
+from bson import json_util
 
 
 # NOTE If a subscriber is processing the messages at a slower rate than the
@@ -25,7 +25,7 @@ class ActivitySub(object):
         socket.setsockopt(zmq.SUBSCRIBE, "")
         while True:
             msg = socket.recv()
-            msg = json.loads(msg)
+            msg = json_util.loads(msg)
             cls._handle(msg)
 
     @classmethod

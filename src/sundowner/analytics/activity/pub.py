@@ -1,8 +1,8 @@
 """Publish system activity messages to a 0MQ socket (returning immediately)."""
 
-import json
 import time
 import zmq
+from bson import json_util
 
 
 class ActivityPub(object):
@@ -52,7 +52,7 @@ class ActivityPub(object):
                 "verb":             verb,
                 "subject":          subject,
                 }
-            self._get_conn().send(json.dumps(doc))
+            self._get_conn().send(json_util.dumps(doc))
 
         except Exception as e:
             # this is an auxilliary feature and shouldn't cause a request to
