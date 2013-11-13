@@ -1,6 +1,7 @@
 import datetime
 import motor
 import os.path
+import pymongo
 import tornado.gen
 import tornado.ioloop
 import tornado.web
@@ -19,7 +20,8 @@ class ActivityStore(object):
         db_primary =    db_conn["sundowner_sandbox"]
 
         result = []
-        cursor = db_analytics.actvity.find(spec).limit(cls._BATCH_SIZE)
+        cursor = db_analytics.actvity.find()
+        cursor.sort([("_id", pymongo.DESCENDING)]).limit(cls._BATCH_SIZE)
         while (yield cursor.fetch_next):
             activity = cursor.next_object()
 
@@ -68,8 +70,10 @@ class ActivityStore(object):
 
 
 class Handler(tornado.web.RequestHandler):
+
+    @tornado.gen.coroutine
     def get(self):
-        db_conn = self.setting["db_conn"]
+        db_conn = self.settings["db_conn"]
         activity = yield ActivityStore.get(db_conn)
         self.render("activity.html", activity=activity)
 
