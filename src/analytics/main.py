@@ -53,7 +53,9 @@ class ActivityStore(object):
                     activity["actor_data"]["facebook"]["name"],
                     activity["actor"])
             else:
-                subject = "%s, %s" % (subject["lng"], subject["lat"])
+                subject = "%s, %s" % (
+                    activity["subject"]["lng"], 
+                    activity["subject"]["lat"])
 
             result.append({
                 "time":     time,
