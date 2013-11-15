@@ -16,7 +16,7 @@ class Data(object):
 
     @tornado.gen.coroutine
     def ensure_indexes(self):
-        yield self._coll.ensure_index([
+        return self._coll.ensure_index([
             ('user_id',     pymongo.ASCENDING),
             ('content_id',  pymongo.ASCENDING),
             ('vote',        pymongo.ASCENDING),

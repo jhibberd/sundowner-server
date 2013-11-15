@@ -10,7 +10,7 @@ class Data(object):
 
     @tornado.gen.coroutine
     def ensure_indexes(self):
-        yield self._conn.ensure_index("facebook.id", unique=True)
+        return self._conn.ensure_index("facebook.id", unique=True)
 
     @tornado.gen.coroutine
     def create(self, user_meta):

@@ -24,7 +24,7 @@ class Data(object):
         # instead of explicity sorting the results by the 'score' field we're
         # relying on the fact that the compound index will already be storing
         # the documents in this order
-        yield self._coll.ensure_index([
+        return self._coll.ensure_index([
             ('loc', pymongo.GEOSPHERE), 
             ('score.overall', pymongo.DESCENDING),
             ])
