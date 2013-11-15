@@ -21,7 +21,10 @@ class ActivitySub(object):
         """Synchronously handle published messages in infinite loop."""
         context = zmq.Context()
         socket = context.socket(zmq.SUB)
-        socket.connect("tcp://localhost:5556")
+        socket.connect("tcp://%s:%s" % (
+            sundowner.config.cfg["queue-host"],
+            sundowner.config.cfg["queue-port"],
+            ))
         socket.setsockopt(zmq.SUBSCRIBE, "")
         while True:
             msg = socket.recv()

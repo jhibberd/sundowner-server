@@ -1,6 +1,0 @@
-port:                   8051
-database:               sundowner_instagram
-database-analytics:     sundowner_analytics
-cache-key-auth:         auth
-fb-app-id:              215833641927561
-fb-app-secret:          274af04abdb6490a4186a23a75f5d80d

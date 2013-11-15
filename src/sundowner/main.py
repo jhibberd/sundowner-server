@@ -214,7 +214,7 @@ def main():
         (r"/votes",     VotesHandler),      # POST
         ], 
         activity_pub=ActivityPub())
-    application.listen(sundowner.config.cfg["port"])
+    application.listen(sundowner.config.cfg["api-port"])
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':

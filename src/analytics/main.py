@@ -2,6 +2,8 @@ import datetime
 import motor
 import os.path
 import pymongo
+import sundowner.config
+import sys
 import tornado.gen
 import tornado.ioloop
 import tornado.web
@@ -16,8 +18,8 @@ class ActivityStore(object):
     @tornado.gen.coroutine
     def get(cls, db_conn):
 
-        db_analytics =  db_conn["sundowner_analytics"]
-        db_primary =    db_conn["sundowner_sandbox"]
+        db_analytics =  db_conn[sundowner.config.cfg["db-name-analytics"]]
+        db_primary =    db_conn[sundowner.config.cfg["db-name-primary"]]
 
         result = []
         cursor = db_analytics.activity.find()
@@ -91,14 +93,25 @@ class Handler(tornado.web.RequestHandler):
 
 
 def main():
-    db_conn = motor.MotorClient().open_sync()
+
+    # init config
+    try:
+        config_filepath = sys.argv[1]
+    except IndexError:
+        raise Exception('No config file specified')
+    sundowner.config.init(config_filepath)
+
+    db_conn = motor.MotorClient(
+        sundowner.config.cfg["db-host"],
+        sundowner.config.cfg["db-port"],
+        ).open_sync()
     application = tornado.web.Application([
         (r"/", Handler),
         ], 
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         db_conn=db_conn,
         debug=True)
-    application.listen(82)
+    application.listen(sundowner.config.cfg["analytics-port"])
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':

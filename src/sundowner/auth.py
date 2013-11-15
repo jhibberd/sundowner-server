@@ -124,8 +124,15 @@ class _Cache(object):
 
     @classmethod
     def _get_conn(cls):
+        # TODO the app only needs a single redis connection as it's 
+        # thread-safe, so refactor this once usage of redis expands to other
+        # parts of the app
         if not hasattr(cls, "_conn"):
-            cls._conn = redis.Redis()
+            cls._conn = redis.Redis(
+                host=   sundowner.config.cfg["cache-host"],
+                port=   sundowner.config.cfg["cache-port"],
+                db=     sundowner.config.cfg["cache-db"],
+                )
         return cls._conn
 
     @staticmethod
