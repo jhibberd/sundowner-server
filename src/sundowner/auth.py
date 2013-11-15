@@ -142,10 +142,3 @@ class _Cache(object):
 
 class AuthError(Exception): pass
 
-if __name__ == "__main__":
-    sundowner.config.init("/home/jhibberd/projects/sundowner/cfg/sandbox.yaml")
-    access_token = "CAADETKZBOw4kBAAj5YlOaZB02G7fJx3yKAP2ZAdP6B9JqbbGoOXjG8K7zdc8xbvqVhFuc3nt7LG2K1pmZBgXTx2ZAFA0OWZCMkCJ0JlJ5W8qjjZBRhrveLBTMlJmTG1vVG3s1gsCnAU6MLoQ0IQZAK349yBByHbiSRcRZBoTJDWoZClgiZB8NCoJnYAeeu4XECZBt0oWUSyigbLd1tGRhTHwQZBtH"
-    data = FacebookGraphAPI.debug_token(access_token)
-    print FacebookGraphAPI.get_user(data["user_id"], access_token) 
-    #print FacebookGraphAPI.debug_token("CAACEdEose0cBADOSxMHr9S5pvwIdfyUcIlm72oMC8ZAMwAZAWnO5110nY0myLl1WAsZBNOeSZBGUSqfCTGQoz99mRVX66OhYth2olXPZCRZC4GrBNhBW5bReE1ZAbq0RbhlZBbDuROoiYtXF20X0EP2U6loJnADRWDTzXKDZBlem8o7m67nM3UctlI2jWiAbeXo4ZD")
-
