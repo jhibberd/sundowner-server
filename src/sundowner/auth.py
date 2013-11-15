@@ -119,7 +119,7 @@ class _Cache(object):
         cls._get_conn().set(
             name=   key, 
             value=  str(user_id),                   # from ObjectId
-            ex=     (expiry - long(time.time())     # from timestamp to secs
+            ex=     (expiry - long(time.time()))    # from timestamp to secs
             )
 
     @classmethod
