@@ -8,6 +8,7 @@ Usage:
 
 import httplib
 import json
+import sundowner.auth
 import sundowner.config
 import sundowner.data
 import sys
@@ -82,7 +83,8 @@ class ContentHandler(RequestHandler):
     def get(self):
         """Return top content near a location."""
 
-        user_id = yield auth.validate(self.get_argument("access_token"))
+        user_id = \
+            yield sundowner.auth.validate(self.get_argument("access_token"))
         args = {
             "lng":      self.get_argument("lng"),
             "lat":      self.get_argument("lat"),
@@ -122,7 +124,8 @@ class ContentHandler(RequestHandler):
     def post(self):
         """Save content to the database."""
 
-        user_id = yield auth.validate(self.get_argument("access_token"))
+        user_id = \
+            yield sundowner.auth.validate(self.get_argument("access_token"))
 
         payload =           self.get_json_request_body()
         args = {
@@ -170,7 +173,8 @@ class VotesHandler(RequestHandler):
     def post(self):
         """Register a vote up or down against a piece of content."""
 
-        user_id = yield auth.validate(self.get_argument("access_token"))
+        user_id = \
+            yield sundowner.auth.validate(self.get_argument("access_token"))
 
         payload =           self.get_json_request_body()
         args = {
