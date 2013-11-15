@@ -36,7 +36,7 @@ def validate(access_token):
     raise tornado.gen.Return(user_id)
 
 @tornado.gen.coroutine
-def _create_or_upate_user_record(fb_user_id, user_meta):
+def _create_or_update_user_record(fb_user_id, user_meta):
     user_record = \
         yield sundowner.data.users.read_by_facebook_user_id(fb_user_id)
     if user_record is None:
