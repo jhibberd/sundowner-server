@@ -2,6 +2,7 @@
 content.
 """
 
+import motor
 import pymongo
 import time
 import tornado.gen
@@ -17,14 +18,14 @@ class Data(object):
 
     def __init__(self, db):
         """See sundowner.data"""
-        self._coll = db.content
+        self._conn = db.content
     
     @tornado.gen.coroutine
     def ensure_indexes(self):
         # instead of explicity sorting the results by the 'score' field we're
         # relying on the fact that the compound index will already be storing
         # the documents in this order
-        return self._coll.ensure_index([
+        yield motor.Op(self._conn.ensure_index, [
             ('loc', pymongo.GEOSPHERE), 
             ('score.overall', pymongo.DESCENDING),
             ])
@@ -47,29 +48,31 @@ class Data(object):
             }
 
         # NOTE I'm not sure whether it's necessary to apply a 'limit' twice
-        cursor = self._coll.find(spec).limit(_BATCH_SIZE)
-        result = yield cursor.to_list(length=_BATCH_SIZE)
+        cursor = self._conn.find(spec).limit(_BATCH_SIZE)
+        result = yield motor.Op(cursor.to_list, length=_BATCH_SIZE)
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
     def put(self, content):
         """Save new content to the database."""
         content['created'] = long(time.time())
-        yield self._coll.insert(content)
+        yield motor.Op(self._conn.insert, content)
 
     @tornado.gen.coroutine
     def inc_vote(self, content_id, vote):
         """Increment either the votes up or down count for the content."""
         assert vote in [Vote.UP, Vote.DOWN]
         field = 'votes.up' if vote == Vote.UP else 'votes.down'
-        yield self._coll.update(
-            {'_id': content_id}, {'$inc': {field: 1}}) 
+        yield motor.Op(
+            self._conn.update,
+            {'_id': content_id}, 
+            {'$inc': {field: 1}}) 
 
     @tornado.gen.coroutine
     def exists(self, content_id):
         """Return whether a content ID exists."""
         # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb-slow-findone-vs-find/
-        count = yield self._coll.find(
-            {'_id': content_id}, {'_id': 1}).limit(1).count()
+        count = yield motor.Op(
+            self._conn.find({'_id': content_id}, {'_id': 1}).limit(1).count)
         raise tornado.gen.Return(count == 1)
 

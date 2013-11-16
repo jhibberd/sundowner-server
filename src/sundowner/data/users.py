@@ -17,15 +17,16 @@ class Data(object):
         user_id = ObjectId()
         assert "id" in user_meta
         assert "name" in user_meta
-        yield self._conn.insert({
+        yield motor.Op(self._conn.insert, {
             "_id":          user_id,
             "facebook":     user_meta,
             })
         raise tornado.gen.Return(user_id)
 
+    # TODO can we just return here?
     @tornado.gen.coroutine
     def read_by_facebook_user_id(self, fb_user_id):
-        doc = yield self._conn.find_one({"facebook.id": fb_user_id})
+        doc = yield motor.Op(self._conn.find_one, {"facebook.id": fb_user_id})
         raise tornado.gen.Return(doc)
 
     @tornado.gen.coroutine
@@ -33,11 +34,11 @@ class Data(object):
         """Resolve a list of user IDs to usernames."""
         cursor = self._conn.find(
             {'_id': {'$in': user_ids}}, {'facebook.name': 1})
-        result = yield cursor.to_list(length=10)
+        result = yield motor.Op(cursor.to_list, length=10)
         result = dict([(d['_id'], d['facebook']["name"]) for d in result])
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
     def update(self, doc):
-        yield self._conn.update({"_id": doc["_id"]}, doc)
+        yield motor.Op(self._conn.update, {"_id": doc["_id"]}, doc)
 
