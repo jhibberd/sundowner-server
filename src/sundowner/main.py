@@ -72,6 +72,7 @@ class RequestHandler(tornado.web.RequestHandler):
             result['data'] = data
         self.set_status(status_code)
         self.write(result)
+        self.finish()
 
 
 # Handlers ---------------------------------------------------------------------
@@ -79,6 +80,7 @@ class RequestHandler(tornado.web.RequestHandler):
 class ContentHandler(RequestHandler):
 
     _RESULT_SIZE = 10
+    @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         """Return top content near a location."""
@@ -120,6 +122,7 @@ class ContentHandler(RequestHandler):
 
         self.complete(data=result)
 
+    @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
         """Save content to the database."""
@@ -168,6 +171,7 @@ class ContentHandler(RequestHandler):
 
 class VotesHandler(RequestHandler):
 
+    @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
         """Register a vote up or down against a piece of content."""

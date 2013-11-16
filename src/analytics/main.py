@@ -29,13 +29,14 @@ class ActivityStore(object):
 
             # augment actor data
             activity["actor_data"] = \
-                yield db_primary.users.find_one(
-                    {"_id": activity["actor"]}) 
+                yield motor.Op(
+                    db_primary.users.find_one, {"_id": activity["actor"]}) 
 
             # augment subject data (if available)
             if activity["verb"] in [Verb.CREATE, Verb.LIKE, Verb.DISLIKE]:
                 activity["subject_data"] = \
-                    yield db_primary.content.find_one(
+                    yield motor.Op(
+                        db_primary.content.find_one,
                         {"_id": activity["subject"]["content_id"]}) 
 
             # format time
@@ -85,11 +86,13 @@ class ActivityStore(object):
 
 class Handler(tornado.web.RequestHandler):
 
+    @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         db_conn = self.settings["db_conn"]
         activity = yield ActivityStore.get(db_conn)
         self.render("activity.html", activity=activity)
+        self.finish()
 
 
 def main():
