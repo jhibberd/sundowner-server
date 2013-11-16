@@ -83,12 +83,12 @@ class ContentHandler(RequestHandler):
     def get(self):
         """Return top content near a location."""
 
-        user_id = \
-            yield sundowner.auth.validate(self.get_argument("access_token"))
         args = {
-            "lng":      self.get_argument("lng"),
-            "lat":      self.get_argument("lat"),
+            "access_token":     self.get_argument("access_token"),
+            "lng":              self.get_argument("lng"),
+            "lat":              self.get_argument("lat"),
             }
+        user_id = yield sundowner.auth.validate(args["access_token"])
         validate.ContentHandlerValidator().validate_get(args)
 
         # get all nearby content
@@ -124,17 +124,16 @@ class ContentHandler(RequestHandler):
     def post(self):
         """Save content to the database."""
 
-        user_id = \
-            yield sundowner.auth.validate(self.get_argument("access_token"))
-
-        payload =           self.get_json_request_body()
+        payload =               self.get_json_request_body()
         args = {
-            "lng":          payload.get("lng"),
-            "lat":          payload.get("lat"),
-            "text":         payload.get("text"),
-            "accuracy":     payload.get("accuracy"),
-            "url":          payload.get("url"),
+            "access_token":     payload.get("access_token"),
+            "lng":              payload.get("lng"),
+            "lat":              payload.get("lat"),
+            "text":             payload.get("text"),
+            "accuracy":         payload.get("accuracy"),
+            "url":              payload.get("url"),
             }
+        user_id = yield sundowner.auth.validate(args["access_token"])
         validate.ContentHandlerValidator().validate_post(args)
 
         content_id = ObjectId()
@@ -173,14 +172,13 @@ class VotesHandler(RequestHandler):
     def post(self):
         """Register a vote up or down against a piece of content."""
 
-        user_id = \
-            yield sundowner.auth.validate(self.get_argument("access_token"))
-
-        payload =           self.get_json_request_body()
+        payload =               self.get_json_request_body()
         args = {
-            "content_id":   payload.get("content_id"),
-            "vote":         payload.get("vote"),
+            "access_token":     payload.get("access_token"),
+            "content_id":       payload.get("content_id"),
+            "vote":             payload.get("vote"),
             }
+        user_id = yield sundowner.auth.validate(args["access_token"])
         yield validate.VotesHandlerValidator().validate_get(args)
 
         accepted = yield sundowner.data.votes.put(
