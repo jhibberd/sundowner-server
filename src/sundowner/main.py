@@ -51,10 +51,11 @@ class RequestHandler(tornado.web.RequestHandler):
             exception = tornado.web.HTTPError(httplib.INTERNAL_SERVER_ERROR)
             exception.message = 'Oops, an error occurred.'
 
+        code = getattr(exception, "custom_error_code", status_code)
         self.finish({
             'meta': {
                 'error_type':       exception.__class__.__name__,
-                'code':             status_code,
+                'code':             code,
                 'error_message':    exception.message,
                 }})
 

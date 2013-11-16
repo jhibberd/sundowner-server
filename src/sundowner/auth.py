@@ -11,6 +11,7 @@ import tornado.gen
 import tornado.httpclient
 import urllib
 from bson.objectid import ObjectId
+from sundowner.error import AuthError
 
 
 @tornado.gen.coroutine
@@ -141,7 +142,4 @@ class _Cache(object):
     @staticmethod
     def _key(access_token):
         return "%s/%s" % (sundowner.config.cfg["cache-key-auth"], access_token)
-
-
-class AuthError(Exception): pass
 
