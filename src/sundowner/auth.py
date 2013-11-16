@@ -45,7 +45,7 @@ def _create_or_update_user_record(fb_user_id, user_meta):
         user_record["facebook"] = user_meta
         yield sundowner.data.users.update(user_record)
         user_id = user_record["_id"]
-    raise tornado.get.Return(user_id)
+    raise tornado.gen.Return(user_id)
 
 class FacebookGraphAPI(object):
 
