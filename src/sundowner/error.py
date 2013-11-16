@@ -13,10 +13,10 @@ class BadRequestError(tornado.web.HTTPError):
 
 class AuthError(tornado.web.HTTPError):
 
-    def __init__(self):
+    def __init__(self, message):
         super(AuthError, self).__init__(httplib.BAD_REQUEST)
         self.custom_error_code = _CustomErrorCode.AUTH_ERROR
-        self.message = "Bad Facebook access token"
+        self.message = message
 
 
 class _CustomErrorCode(object):
