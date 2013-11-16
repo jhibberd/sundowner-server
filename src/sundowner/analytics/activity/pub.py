@@ -39,8 +39,8 @@ class ActivityPub(object):
         if not hasattr(self, "_conn"):
             context = zmq.Context()
             socket = context.socket(zmq.PUB)
-            socket.bind("tcp://%s:%s" % (
-                sundowner.config.cfg["queue-host"],
+            # must bind to *
+            socket.bind("tcp://*:%s" % (
                 sundowner.config.cfg["queue-port"],
                 ))
             self._conn = socket
