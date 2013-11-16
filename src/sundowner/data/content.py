@@ -64,9 +64,7 @@ class Data(object):
         assert vote in [Vote.UP, Vote.DOWN]
         field = 'votes.up' if vote == Vote.UP else 'votes.down'
         yield motor.Op(
-            self._conn.update,
-            {'_id': content_id}, 
-            {'$inc': {field: 1}}) 
+            self._conn.update, {'_id': content_id}, {'$inc': {field: 1}}) 
 
     @tornado.gen.coroutine
     def exists(self, content_id):

@@ -116,7 +116,7 @@ class VotesHandlerValidator(object):
         content_id = ObjectId(content_id)
         if not (yield sundowner.data.content.exists(content_id)):
             raise BadRequestError("'content_id' does not exist.")
-        args["content_id"]
+        args["content_id"] = content_id
 
         vote = args["vote"]
         if vote is None:
