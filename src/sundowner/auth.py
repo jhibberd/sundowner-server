@@ -31,7 +31,7 @@ def validate(access_token):
         fb_user_id = access_token_meta["user_id"]
         user_meta = yield FacebookGraphAPI.get_user(fb_user_id, access_token)
         user_id = yield _create_or_update_user_record(fb_user_id, user_meta)
-        _Cache.put(access_token, user_id, access_token_meta["expiry"])
+        _Cache.put(access_token, user_id, access_token_meta["expires_at"])
 
     raise tornado.gen.Return(user_id)
 
@@ -83,8 +83,11 @@ class FacebookGraphAPI(object):
         if data["is_valid"] != True:
             raise AuthError("Access token isn't valid")
 
+        # Facebook user IDs are stored as strings in the database
+        user_id = str(data["user_id"])
+
         raise tornado.gen.Return({
-            "user_id":      data["user_id"],
+            "user_id":      user_id,
             "expires_at":   data["expires_at"],
             })
 
