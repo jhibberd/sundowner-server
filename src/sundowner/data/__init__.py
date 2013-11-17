@@ -19,12 +19,14 @@ content =   None
 users =     None
 votes =     None
 
-def connect(host='localhost', port=27017):
+def connect():
     global content, users, votes
 
-    database = sundowner.config.cfg['database']
-    client = motor.MotorClient(host, port).open_sync()
-    db = client[database]
+    client = motor.MotorClient(
+        sundowner.config.cfg["db-host"],
+        sundowner.config.cfg["db-port"],
+        ).open_sync()
+    db = client[sundowner.config.cfg["db-name-primary"]]
 
     content = content_data.Data(db)
     users = users_data.Data(db)

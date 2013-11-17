@@ -15,8 +15,11 @@ class ActivityStore(object):
     def _get_conn(cls):
         """Return on-demand connection the the MongoDB collection."""
         if not hasattr(cls, "_conn"):
-            db = sundowner.config.cfg["database-analytics"]
-            client = MongoClient()
-            cls._conn = client[db].activity
+            client = MongoClient(
+                sundowner.config.cfg["db-host"],
+                sundowner.config.cfg["db-port"],
+                )
+            db_name = sundowner.config.cfg["db-name-analytics"]
+            cls._conn = client[db_name].activity
         return cls._conn
 

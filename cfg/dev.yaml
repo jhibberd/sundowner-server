@@ -1,0 +1,20 @@
+
+api-port:               8051
+analytics-port:         83
+
+db-host:                localhost
+db-port:                27017
+db-name-primary:        sundowner_primary_dev
+db-name-analytics:      sundowner_analytics_dev
+
+cache-host:             localhost
+cache-port:             6379
+cache-db:               1
+cache-key-auth:         auth
+
+queue-host:             localhost
+queue-port:             5557
+
+fb-app-id:              215833641927561
+fb-app-secret:          274af04abdb6490a4186a23a75f5d80d
+

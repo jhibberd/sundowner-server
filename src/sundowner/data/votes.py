@@ -1,3 +1,4 @@
+import motor
 import pymongo
 import pymongo.errors
 import tornado.gen
@@ -12,11 +13,11 @@ class Data(object):
 
     def __init__(self, db):
         """See sundowner.data"""
-        self._coll = db.votes
+        self._conn = db.votes
 
     @tornado.gen.coroutine
     def ensure_indexes(self):
-        yield self._coll.ensure_index([
+        return self._conn.ensure_index([
             ('user_id',     pymongo.ASCENDING),
             ('content_id',  pymongo.ASCENDING),
             ('vote',        pymongo.ASCENDING),
@@ -29,7 +30,7 @@ class Data(object):
         Returns whether the vote was successfully registered.
         """
         try:
-            yield self._coll.insert({
+            yield motor.Op(self._conn.insert, {
                 'user_id':      user_id,
                 'content_id':   content_id,
                 'vote':         vote,

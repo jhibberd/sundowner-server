@@ -10,3 +10,17 @@ class BadRequestError(tornado.web.HTTPError):
         super(BadRequestError, self).__init__(httplib.BAD_REQUEST)
         self.message = message
 
+
+class AuthError(tornado.web.HTTPError):
+
+    def __init__(self, message):
+        super(AuthError, self).__init__(httplib.BAD_REQUEST)
+        self.custom_error_code = _CustomErrorCode.AUTH_ERROR
+        self.message = message
+
+
+class _CustomErrorCode(object):
+    """Codes for custom errors raised by the API that the apps can respond to.
+    """
+    AUTH_ERROR = 100
+
