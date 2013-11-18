@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
     <h2>User</h2>
-    <h3>{{ user["facebook"]["name"] }}</h3>
-    <pre class="prettyprint">{{ user }}</pre>
+    <pre class="prettyprint">
+        <script>
+            var data = {% raw user %};
+            document.write(JSON.stringify(data, undefined, 2));
+        </script>
+    </pre>
     <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
 {% end %}
 

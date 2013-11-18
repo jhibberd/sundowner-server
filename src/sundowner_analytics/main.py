@@ -6,8 +6,9 @@ import sys
 import tornado.gen
 import tornado.ioloop
 import tornado.web
-from sundowner_analytics.db import Database
+from bson import json_util
 from bson.objectid import ObjectId
+from sundowner_analytics.db import Database
 
 
 class ActivityHandler(tornado.web.RequestHandler):
@@ -28,7 +29,7 @@ class UsersHandler(tornado.web.RequestHandler):
         user_id = ObjectId(user_id)
         db_conn = self.settings["db_conn"]
         user = yield Database(db_conn).get_user(user_id)
-        self.render("user.html", user=user)
+        self.render("user.html", user=json_util.dumps(user))
 
 
 def main():
