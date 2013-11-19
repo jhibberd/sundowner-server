@@ -96,7 +96,17 @@ class FacebookGraphAPI(object):
     @tornado.gen.coroutine
     def get_user(user_id, access_token):
         """Get metadata associated with a Facebook user ID.""" 
+
+        # it isn't possible to retrive all default user properties plus their
+        # friends list without explicitly listing each user property
+        # http://stackoverflow.com/questions/10389364
+        # https://developers.facebook.com/docs/graph-api/reference/user/
+        # NOTE The friends list is limited to 5000 entries. Retrieving any more
+        # than this would require the ability to handle pagination.
+        fields = "id,link,first_name,quotes,name,hometown,bio,religion,middle_name,about,is_verified,gender,third_party_id,relationship_status,last_name,locale,verified,political,name_format,significant_other,website,location,username,friends"
+
         url = "https://graph.facebook.com/%s?%s" % (user_id, urllib.urlencode({
+            "fields":       fields
             "access_token": access_token,
             }))
         http_client = tornado.httpclient.AsyncHTTPClient()
