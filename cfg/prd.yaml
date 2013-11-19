@@ -1,6 +1,5 @@
 
 api-port:               8050
-analytics-port:         82
 
 db-host:                localhost
 db-port:                27017
@@ -17,4 +16,9 @@ queue-port:             5556
 
 fb-app-id:              215833641927561
 fb-app-secret:          274af04abdb6490a4186a23a75f5d80d
+
+analytics:
+    port:               82
+    fb-app-id:          552939521453001
+    fb-app-secret:      98b9b622175a332c99277943b6f7b51a
 
