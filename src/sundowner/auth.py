@@ -106,7 +106,7 @@ class FacebookGraphAPI(object):
         fields = "id,link,first_name,quotes,name,hometown,bio,religion,middle_name,about,is_verified,gender,third_party_id,relationship_status,last_name,locale,verified,political,name_format,significant_other,website,location,username,friends"
 
         url = "https://graph.facebook.com/%s?%s" % (user_id, urllib.urlencode({
-            "fields":       fields
+            "fields":       fields,
             "access_token": access_token,
             }))
         http_client = tornado.httpclient.AsyncHTTPClient()
