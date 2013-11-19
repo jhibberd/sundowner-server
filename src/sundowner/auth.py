@@ -31,21 +31,33 @@ def validate(access_token):
         access_token_meta = yield FacebookGraphAPI.debug_token(access_token)
         fb_user_id = access_token_meta["user_id"]
         user_meta = yield FacebookGraphAPI.get_user(fb_user_id, access_token)
-        user_id = yield _create_or_update_user_record(fb_user_id, user_meta)
+        user_id = yield \
+            _create_or_update_user_record(fb_user_id, user_meta, access_token)
         _Cache.put(access_token, user_id, access_token_meta["expires_at"])
 
     raise tornado.gen.Return(user_id)
 
 @tornado.gen.coroutine
-def _create_or_update_user_record(fb_user_id, user_meta):
+def _create_or_update_user_record(fb_user_id, user_meta, access_token):
+
     user_record = \
         yield sundowner.data.users.read_by_facebook_user_id(fb_user_id)
+
     if user_record is None:
-        user_id = yield sundowner.data.users.create(user_meta)
+        user_record = {
+            "facebook":                         user_meta,
+            "last_facebook_update":             long(time.time()),
+            "access_token":                     access_token,
+            }
+        user_id = yield sundowner.data.users.create(user_record)
+
     else:
-        user_record["facebook"] = user_meta
+        user_record["facebook"] =               user_meta
+        user_record["last_facebook_update"] =   long(time.time())
+        user_record["access_token"] =           access_token
         yield sundowner.data.users.update(user_record)
         user_id = user_record["_id"]
+
     raise tornado.gen.Return(user_id)
 
 class FacebookGraphAPI(object):

@@ -14,17 +14,17 @@ class Data(object):
         return self._conn.ensure_index("facebook.id", unique=True)
 
     @tornado.gen.coroutine
-    def create(self, user_meta):
+    def create(self, user_record):
+        
+        # assert that the user record has the required fields
+        assert "id" in user_record["facebook"]
+        assert "name" in user_record["facebook"]
+        
         user_id = ObjectId()
-        assert "id" in user_meta
-        assert "name" in user_meta
-        yield motor.Op(self._conn.insert, {
-            "_id":          user_id,
-            "facebook":     user_meta,
-            })
+        user_record["_id"] = user_id
+        yield motor.Op(self._conn.insert, user_record)
         raise tornado.gen.Return(user_id)
 
-    # TODO can we just return here?
     @tornado.gen.coroutine
     def read_by_facebook_user_id(self, fb_user_id):
         doc = yield motor.Op(self._conn.find_one, {"facebook.id": fb_user_id})
