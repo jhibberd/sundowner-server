@@ -4,138 +4,231 @@ function renderLogo() {
     var list = document.getElementById("logoType");
     var imageType = list.options[list.selectedIndex].value;
 
+    // default rendering options
+    var opts = {
+        width:                          undefined,
+        height:                         undefined,
+        showName:                       false,
+        backgroundColor:                "#33B5E5",
+        foregroundColor:                "#FFFFFF",
+        cardScale:                      .45,
+        nameScale:                      .2,
+        fontScale:                      .13,
+        crop:                           false
+    };
+
     switch (imageType) {
 
+        // iPhone App ----------------------------------------------------------
         case "iphone":
-            drawLogo(57, 57, false);
+            opts.width =                57;
+            opts.height =               57;
             break;
         case "iphone_retina":
-            drawLogo(114, 114, false);
+            opts.width =                114;
+            opts.height =               114;
             break;
         case "iphone_appstore":
-            drawLogo(1024, 1024, false);
+            opts.width =                1024;
+            opts.height =               1024;
             break;
         case "iphone_app_120x120":
-            drawLogo(120, 120, false);
+            opts.width =                120;
+            opts.height =               120;
             break;
         case "iphone_launch":
-            drawLogo(640, 1136, false);
+            opts.width =                640;
+            opts.height =               1136;
             break;
 
+        // Android App ---------------------------------------------------------
         case "android_hdpi":
-            drawLogo(72, 72, false);
+            opts.width =                72;
+            opts.height =               72;
             break;
         case "android_mdpi":
-            drawLogo(48, 48, false);
+            opts.width =                48;
+            opts.height =               48;
             break;
         case "android_xhdpi":
-            drawLogo(96, 96, false);
+            opts.width =                96;
+            opts.height =               96;
             break;
         case "android_xxhdpi":
-            drawLogo(144, 144, false);
+            opts.width =                114;
+            opts.height =               114;
             break;
 
+        // Google Play Store ---------------------------------------------------
         case "googleplay_512x512":
-            drawLogo(512, 512, false);
+            opts.width =                512;
+            opts.height =               512;
             break;
         case "googleplay_1024x500":
-            drawLogo(1024, 500, true);
+            opts.width =                1024;
+            opts.height =               500;
+            opts.showName =             true;
             break;
         case "googleplay_180x120":
-            drawLogo(180, 120, true);
+            opts.width =                180;
+            opts.height =               120;
+            opts.showName =             true;
             break;
 
+        // Facebook App --------------------------------------------------------
         case "facebook_app_16x16":
-            drawLogo(16, 16, false);
+            opts.width =                16;
+            opts.height =               16;
             break;
         case "facebook_app_64x64":
-            drawLogo(64, 64, false);
+            opts.width =                64;
+            opts.height =               64;
             break;
         case "facebook_app_75x75":
-            drawLogo(75, 75, false);
+            opts.width =                75;
+            opts.height =               75;
             break;
         case "facebook_app_96x96":
-            drawLogo(96, 96, false);
+            opts.width =                96;
+            opts.height =               96;
             break;
         case "facebook_app_128x128":
-            drawLogo(128, 128, false);
+            opts.width =                128;
+            opts.height =               128;
             break;
 
+        // Facebook Banner -----------------------------------------------------
         case "facebook_banner_155x100":
-            drawLogo(155, 100, true);
+            opts.width =                155;
+            opts.height =               100;
+            opts.showName =             true;
             break;
         case "facebook_banner_136x88":
-            drawLogo(136, 88, true);
+            opts.width =                136;
+            opts.height =               88;
+            opts.showName =             true;
             break;
         case "facebook_banner_204x132":
-            drawLogo(204, 132, true);
+            opts.width =                204;
+            opts.height =               132;
+            opts.showName =             true;
             break;
         case "facebook_banner_272x176":
-            drawLogo(272, 176, true);
+            opts.width =                272;
+            opts.height =               176;
+            opts.showName =             true;
             break;
         case "facebook_banner_800x150":
-            drawLogo(800, 150, true);
+            opts.width =                800;
+            opts.height =               150;
+            opts.showName =             true;
             break;
 
+        // Other ---------------------------------------------------------------
         case "facebook_pp":
-            drawLogo(180, 180, false);
+            opts.width =                180;
+            opts.height =               180;
+            break;
+        case "website":
+            opts.width =                180;
+            opts.height =               180;
+            opts.backgroundColor =      "#EEEEEE";
+            opts.foregroundColor =      "#333333";
+            opts.crop =                 true;
+            break;
+        case "website_mini":
+            opts.width =                120;
+            opts.height =               120;
+            opts.backgroundColor =      "#FFFFFF";
+            opts.foregroundColor =      "#333333";
+            opts.crop =                 true;
             break;
     }
+    drawLogo(opts);
 };
 
-var PRODUCT_NAME = "Soaptag";
-var PRODUCT_NAME_LOGO_SHRINK_FACTOR = .8;
+var CARD_WIDTH_TO_HEIGHT_RATIO =    1.618; // golden ratio
+var CARD_OFFSET_RATIO =             .11;
+var LINE_WIDTH_RATIO =              .01;
+var NAME_TEXT =                     "Soaptag";
+var CROP_MARGIN =                   3; // pixels
 
-function drawLogo(w, h, showName) {
+function drawLogo(opts) {
 
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    ctx.canvas.width = w;
-    ctx.canvas.height = h;
+    // drawing takes place within a square, so if rectangular dimensions are
+    // provided, calculate the size of the biggest square that fits inside
+    // the rectangle
+    var size = Math.min(opts.width, opts.height);
+    
+    // measure size of logo components relative to the square size
+    var cardHeight =    opts.cardScale * size;
+    var cardWidth =     (opts.cardScale * CARD_WIDTH_TO_HEIGHT_RATIO) * size;
+    var cardOffset =    (opts.cardScale * CARD_OFFSET_RATIO) * size;
+    var nameHeight =    opts.showName ? opts.nameScale * size : 0;
 
-    // fill background
-    ctx.fillStyle = "#33B5E5"
-    ctx.fillRect(0, 0, w, h);
+    // calculate derived measurements
+    var logoHeight =    cardHeight + nameHeight + (cardOffset * 2);
+    var logoWidth =     cardWidth + (cardOffset * 2);
 
-    ctx.fillStyle =     "#ffffff";
-    ctx.lineWidth =     1;
-    ctx.strokeStyle =   "#33B5E5";
+    // calculate offset of square within rectange, so that it appears in the
+    // middle
+    var squareX = (size == opts.width) ? 0 : (opts.width - opts.height) / 2;
+    var squareY = (size == opts.height) ? 0 : (opts.height - opts.width) / 2;
 
-    // center the logo within the canvas regardless of canvas shape or size
-    var size = Math.min(w, h);
-    var xOffset = size == w ? 0 : (w - h) / 2;
-    var yOffset = size == h ? 0 : (h - w) / 2;
+    // calculate the offset (relative to the square) of the logo components
+    var imageX =        (size - logoWidth) / 2;
+    var imageY =        (size - logoHeight) / 2;
+    var nameX =         size / 2;
+    var nameY =         imageX + logoHeight;
 
-    // optionally show the product name in the logo
-    if (showName) {
-
-        var sf = PRODUCT_NAME_LOGO_SHRINK_FACTOR;
-        ctx.font = (size * .13) + "px Helvetica Neue";
-        ctx.textAlign = "center";
-        ctx.fillText(PRODUCT_NAME, xOffset + (size / 2), yOffset + (size * sf));
-
-        // if the product name is being rendered then shrink the size allocated
-        // for the logo and adjust the x offset accordingly.
-        var originalSize = size;
-        size *= sf;
-        xOffset += ((originalSize - size) / 2);
+    // if `crop` is true then adjust the canvas size to fit the logo
+    if (opts.crop) {
+        var canvasWidth =   logoWidth + (CROP_MARGIN * 2);
+        var canvasHeight =  logoHeight + (CROP_MARGIN * 2);
+    } else {
+        var canvasWidth =   opts.width;
+        var canvasHeight =  opts.height;
     }
 
-    var cardHeight =    parseInt(size * .45);
-    var cardWidth =     parseInt(size * (.45 * 1.618)); // golden ratio
-    var cardOffset =    parseInt(size * .05);
+    // if `crop` is true, adjust the component offsets
+    if (opts.crop) {
+        squareX =   0;
+        squareY =   0;
+        imageX =    CROP_MARGIN;
+        imageY =    CROP_MARGIN;
+        nameX =     canvasWidth / 2;
+        nameY =     imageX + logoHeight;
+    }
 
-    var x = xOffset + parseInt((size - ((cardOffset *2) + cardWidth)) / 2);
-    var y = yOffset + parseInt((size - ((cardOffset *2) + cardHeight)) / 2);
+    // prepare the canvas
+    var canvas =        document.getElementById("canvas");
+    var ctx =           canvas.getContext("2d");
+    ctx.canvas.width =  canvasWidth;
+    ctx.canvas.height = canvasHeight;
+    ctx.fillStyle =     opts.backgroundColor;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle =     opts.foregroundColor;
+    ctx.lineWidth =     Math.max(LINE_WIDTH_RATIO * size, 1); 
+    ctx.strokeStyle =   opts.backgroundColor;
+    ctx.font =          (opts.fontScale * size) + "px Helvetica Neue";
+    ctx.textAlign =     "center";
 
-    ctx.fillRect(   x + cardOffset *2, y + cardOffset *2, cardWidth, cardHeight);
-    ctx.strokeRect( x + cardOffset *2, y + cardOffset *2, cardWidth, cardHeight);
+    // render image
+    var w = parseInt(cardWidth);
+    var h = parseInt(cardHeight);
+    for (var i = 2; i >= 0; i--) {
+        var x = parseInt(squareX + imageX + (cardOffset * i));
+        var y = parseInt(squareY + imageY + (cardOffset * i));
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+    }
 
-    ctx.fillRect(   x + cardOffset *1, y + cardOffset *1, cardWidth, cardHeight);
-    ctx.strokeRect( x + cardOffset *1, y + cardOffset *1, cardWidth, cardHeight);
-
-    ctx.fillRect(   x + cardOffset *0, y + cardOffset *0, cardWidth, cardHeight);
-    ctx.strokeRect( x + cardOffset *0, y + cardOffset *0, cardWidth, cardHeight);
+    // render name
+    if (opts.showName) {
+        var x = parseInt(squareX + nameX);
+        var y = parseInt(squareY + nameY);
+        ctx.fillText(NAME_TEXT, x, y);
+    }
 }
 
 function openLogo() {
