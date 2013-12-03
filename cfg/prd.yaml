@@ -1,5 +1,6 @@
 
 api-port:               8050
+www-port:               80
 
 db-host:                localhost
 db-port:                27017
