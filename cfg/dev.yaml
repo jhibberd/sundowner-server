@@ -10,7 +10,6 @@ db-name-analytics:      sundowner_analytics_dev
 cache-host:             localhost
 cache-port:             6379
 cache-db:               1
-cache-key-auth:         auth
 
 queue-host:             localhost
 queue-port:             5557

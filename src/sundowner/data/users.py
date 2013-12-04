@@ -26,6 +26,25 @@ class Data(object):
         raise tornado.gen.Return(user_id)
 
     @tornado.gen.coroutine
+    def read(self, user_id):
+        doc = yield motor.Op(self._conn.find_one, {"_id": user_id})
+        raise tornado.gen.Return(doc)
+
+    @tornado.gen.coroutine
+    def read_native_user_ids_from_facebook_user_ids(self, fb_user_ids):
+        """Return the native user IDs of users whose Facebook ID is in the list
+        `fb_user_ids`.
+
+        The native user IDs are of type ObjectId.
+        """
+        # this query should be covered by the `facebook.id` index
+        cursor = self._conn.find(
+            {"facebook.id": {"$in": fb_user_ids}}, {"_id": 1})
+        result = yield motor.Op(cursor.to_list)
+        result = map(itemgetter("_id"), result)
+        raise tornado.gen.Return(result)
+
+    @tornado.gen.coroutine
     def read_by_facebook_user_id(self, fb_user_id):
         doc = yield motor.Op(self._conn.find_one, {"facebook.id": fb_user_id})
         raise tornado.gen.Return(doc)
@@ -34,9 +53,9 @@ class Data(object):
     def get_usernames(self, user_ids):
         """Resolve a list of user IDs to usernames."""
         cursor = self._conn.find(
-            {'_id': {'$in': user_ids}}, {'facebook.name': 1})
+            {"_id": {"$in": user_ids}}, {"facebook.name": 1})
         result = yield motor.Op(cursor.to_list, length=10)
-        result = dict([(d['_id'], d['facebook']["name"]) for d in result])
+        result = dict([(d["_id"], d["facebook"]["name"]) for d in result])
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine

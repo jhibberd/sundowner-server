@@ -3,14 +3,14 @@
 
 import httplib
 import json
-import redis
 import sundowner.config
 import sundowner.data
 import time
 import tornado.gen
 import tornado.httpclient
 import urllib
-from bson.objectid import ObjectId
+from sundowner.cache.access_token import AccessTokenCache
+from sundowner.cache.friends import FriendsCache
 from sundowner.error import AuthError
 
 
@@ -20,20 +20,26 @@ def validate(access_token):
     ID, creating a new user record if necessary.
     """
 
-    user_id = _Cache.get(access_token)
+    user_id = AccessTokenCache.get(access_token)
 
     # If the access token isn't in the cache then validate it with Facebook
     # and retrieve its metadata. Extract the user ID from the metadata and 
     # query Facebook again for the user metadata. If a record for the user
     # already exists update it with the latest metadata, otherwise create a new
     # record. Finally cache the access token until Facebook expires it.
+    #
+    # If new user metadata is being retrieved it may contain a different list
+    # of friends to those already cached for the user, so clear the user's
+    # friends cache.
     if user_id is None:
         access_token_meta = yield FacebookGraphAPI.debug_token(access_token)
         fb_user_id = access_token_meta["user_id"]
         user_meta = yield FacebookGraphAPI.get_user(fb_user_id, access_token)
         user_id = yield \
             _create_or_update_user_record(fb_user_id, user_meta, access_token)
-        _Cache.put(access_token, user_id, access_token_meta["expires_at"])
+        FriendsCache.clear(user_id)
+        AccessTokenCache.put(
+            access_token, user_id, access_token_meta["expires_at"])
 
     raise tornado.gen.Return(user_id)
 
@@ -125,43 +131,4 @@ class FacebookGraphAPI(object):
         response = yield http_client.fetch(url)
         user_meta = json.loads(response.body)
         raise tornado.gen.Return(user_meta)
-
-
-class _Cache(object):
-    """Cache user IDs by access token."""
-
-    @classmethod
-    def get(cls, access_token):
-        key = cls._key(access_token)
-        user_id = cls._get_conn().get(key)
-        if user_id is None:
-            return None
-        else:
-            return ObjectId(user_id)
-
-    @classmethod
-    def put(cls, access_token, user_id, expiry):
-        key = cls._key(access_token)
-        cls._get_conn().set(
-            name=   key, 
-            value=  str(user_id),                   # from ObjectId
-            ex=     (expiry - long(time.time()))    # from timestamp to secs
-            )
-
-    @classmethod
-    def _get_conn(cls):
-        # TODO the app only needs a single redis connection as it's 
-        # thread-safe, so refactor this once usage of redis expands to other
-        # parts of the app
-        if not hasattr(cls, "_conn"):
-            cls._conn = redis.Redis(
-                host=   sundowner.config.cfg["cache-host"],
-                port=   sundowner.config.cfg["cache-port"],
-                db=     sundowner.config.cfg["cache-db"],
-                )
-        return cls._conn
-
-    @staticmethod
-    def _key(access_token):
-        return "%s/%s" % (sundowner.config.cfg["cache-key-auth"], access_token)
 
