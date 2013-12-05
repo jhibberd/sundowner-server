@@ -1,4 +1,5 @@
 import sundowner.cache
+from bson.objectid import ObjectId
 
 
 class FriendsCache(sundowner.cache.CacheBase):
@@ -22,6 +23,7 @@ class FriendsCache(sundowner.cache.CacheBase):
             return None
         friends = friends.split(',')
         friends = map(ObjectId, friends)
+        friends = set(friends)
         return friends
 
     @classmethod

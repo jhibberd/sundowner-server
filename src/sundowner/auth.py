@@ -54,6 +54,13 @@ def _create_or_update_user_record(fb_user_id, user_meta, access_token):
             "facebook":                         user_meta,
             "last_facebook_update":             long(time.time()),
             "access_token":                     access_token,
+
+            # This value needs to appear at the top level of the doc so that
+            # the `facebook_id` index covers the 
+            # `read_native_user_ids_from_facebook_user_ids` query. Is seems
+            # that using dot notation prevents MongoDB from covering the 
+            # query.
+            "facebook_id":                      fb_user_id,
             }
         user_id = yield sundowner.data.users.create(user_record)
 

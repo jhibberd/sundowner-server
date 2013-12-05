@@ -1,6 +1,8 @@
 import motor
+import pymongo
 import tornado.gen
 from bson.objectid import ObjectId
+from operator import itemgetter
 
 
 class Data(object):
@@ -11,7 +13,11 @@ class Data(object):
 
     @tornado.gen.coroutine
     def ensure_indexes(self):
-        return self._conn.ensure_index("facebook.id", unique=True)
+        # in order for `read_native_user_ids_from_facebook_user_ids` to be
+        # covered the field being queried cannot use dot notation
+        return self._conn.ensure_index([
+            ("facebook_id", pymongo.ASCENDING), ("_id", pymongo.ASCENDING)], 
+            unique=True)
 
     @tornado.gen.coroutine
     def create(self, user_record):
@@ -30,6 +36,9 @@ class Data(object):
         doc = yield motor.Op(self._conn.find_one, {"_id": user_id})
         raise tornado.gen.Return(doc)
 
+    # The first page of friends returned by the Facebook Graph API for a user
+    # is limited to 5000
+    _MAX_FRIENDS = 5000
     @tornado.gen.coroutine
     def read_native_user_ids_from_facebook_user_ids(self, fb_user_ids):
         """Return the native user IDs of users whose Facebook ID is in the list
@@ -37,11 +46,19 @@ class Data(object):
 
         The native user IDs are of type ObjectId.
         """
-        # this query should be covered by the `facebook.id` index
+
+        # this query is covered by the `facebook_id` index
         cursor = self._conn.find(
-            {"facebook.id": {"$in": fb_user_ids}}, {"_id": 1})
+            {"facebook_id": {"$in": fb_user_ids}}, {"_id": 1})
+        # impose a cursor limit to suppress warning
+        cursor.limit(self._MAX_FRIENDS)
+
+        # uncomment to check it is covered by the index
+        #result = yield motor.Op(cursor.explain); raise Exception(result)
+
         result = yield motor.Op(cursor.to_list)
         result = map(itemgetter("_id"), result)
+        result = set(result)
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
