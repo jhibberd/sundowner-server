@@ -22,3 +22,10 @@ analytics:
     fb-app-id:          627843653945574
     fb-app-secret:      f504f2908d81726781a8ed4dd480ccac
 
+score-weights:
+    vote:               0.8
+    day_offset:         0.3
+    week_offset:        0.1
+    friend:             2.0
+    location:           1.5
+

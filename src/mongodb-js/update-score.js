@@ -7,6 +7,7 @@
  *
  */
 
+// TODO to be added automatically by script
 var WEIGHT_VOTE             = 0.8;
 var WEIGHT_DAY_OFFSET       = 0.3;
 var WEIGHT_WEEK_OFFSET      = 0.1;
@@ -32,13 +33,11 @@ var calcWilsonScoreInterval = function(up, down) {
     return ((phat + z*z/(2*n) - z * Math.sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n));
 };
 
-var WEIGHT_SUM = WEIGHT_VOTE + WEIGHT_DAY_OFFSET + WEIGHT_WEEK_OFFSET;
 var calcOverallScore = function(scoreVote, scoreDayOffset, scoreWeekOffset) {
-    var total =
+    return
         scoreVote * WEIGHT_VOTE +
         scoreDayOffset * WEIGHT_DAY_OFFSET +
         scoreWeekOffset * WEIGHT_WEEK_OFFSET;
-    return total / WEIGHT_SUM;
 };
 
 /* Distance in seconds between two times of day (00:00 - 23:59).
