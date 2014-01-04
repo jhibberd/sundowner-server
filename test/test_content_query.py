@@ -1,46 +1,16 @@
 import motor
 import pprint
 import random
-import sundowner.config
 import sundowner.data
+import test
 import timeit
 import tornado.gen
-import unittest
-from bson.objectid import ObjectId
-from sundowner.cache import _ThreadSafeCacheConnection
 from sundowner.cache.friends import FriendsCache
 from sundowner.model.content import ContentModel
 from tornado.ioloop import IOLoop
 
 
-class Test(unittest.TestCase):
-
-    # Setup --------------------------------------------------------------------
-
-    _CFG_PATH = "/home/jhibberd/projects/sundowner/cfg/dev.yaml"
-    def setUp(self):
-        # init and reset env
-        sundowner.config.init(self._CFG_PATH)
-        sundowner.data.connect()
-        self.clear_db()
-        _ThreadSafeCacheConnection.get().flushall()
-
-    @classmethod
-    def clear_db(cls):
-        @tornado.gen.coroutine
-        def f():
-            yield motor.Op(sundowner.data.users._conn.remove, None)
-            yield motor.Op(sundowner.data.content._conn.remove, None)
-        IOLoop.instance().run_sync(f)
-
-    _NOUNS = map(lambda ln: ln[:-2], open("nouns.txt").readlines())
-    @classmethod
-    def rand_noun(cls):
-        """Return a random english noun string."""
-        return random.choice(cls._NOUNS)
-
-
-    # Tests --------------------------------------------------------------------
+class Test(test.TestBase):
 
     QUERY_LAT =     0
     QUERY_LNG =     0
