@@ -19,10 +19,11 @@ import tornado.ioloop
 import tornado.web
 from bson.objectid import ObjectId
 from operator import itemgetter
-from sundowner import memsort, validate
+from sundowner import validate
 from sundowner.analytics.activity.pub import ActivityPub
 from sundowner.data.votes import Vote
 from sundowner.error import BadRequestError
+from sundowner.model.content import ContentModel
 
 
 # Helpers ----------------------------------------------------------------------
@@ -95,27 +96,8 @@ class ContentHandler(RequestHandler):
         validate.ContentHandlerValidator().validate_get(args)
 
         # get all nearby content
-        top_content = yield sundowner.data.content.get_nearby(
-            args["lng"], args["lat"])
-
-        # refine sort order be performing secondary, in-memory sort using
-        # additional content attributes
-        top_content = memsort.sort(args["lng"], args["lat"], top_content)
-        top_content = top_content[:self._RESULT_SIZE]
-
-        # replace user IDs with usernames
-        user_ids = map(itemgetter("user_id"), top_content)
-        username_map = yield sundowner.data.users.get_usernames(user_ids)
-
-        result = []
-        for content in top_content:
-            username = username_map[content["user_id"]]
-            result.append({
-                "id":           str(content["_id"]),
-                "text":         content["text"],
-                "url":          content["url"],
-                "username":     username,
-                })
+        result = yield ContentModel.get_nearby(
+            args["lng"], args["lat"], user_id)
 
         # write activity
         self.settings["activity_pub"].write_user_view_content(
