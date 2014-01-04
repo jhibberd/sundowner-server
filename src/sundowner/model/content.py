@@ -61,48 +61,6 @@ class ContentModel(object):
         raise tornado.gen.Return(result)
 
 
-    # OLD (for benchmarking) ---------------------------------------------------
-
-    @classmethod
-    @tornado.gen.coroutine
-    def get_nearby_old(cls, lng, lat):
-
-        tags = yield sundowner.data.content.get_nearby_old(
-            lng, lat, cls._BATCH_SIZE_DB_FINAL)
-
-        # bit adapting necessary
-        for tag in tags:
-            tag["score"]["friend"] = 0
-
-        # allow the tag's distance from the query location to influence the 
-        # sort order
-        tags = _DistanceSorter.sort(lng, lat, tags, cls._BATCH_SIZE_RESULT)
-
-        # author data for tags not created by friends is not shown, but author 
-        # data for tags created by friends needs to be retrieved from the 
-        # `Users` collection
-        friend_user_ids = []
-        for tag in tags:
-            friend_user_ids.append(tag["user_id"])
-        username_map = \
-            yield sundowner.data.users.get_usernames(friend_user_ids)
-            
-        # format and return the result
-        result = []
-        for tag in tags:
-            entry = {
-                "id":   str(tag["_id"]),
-                "text": tag["text"],
-                "url":  tag["url"],
-                }
-            entry["username"] = username_map[tag["user_id"]]
-            result.append(entry)
-        
-        raise tornado.gen.Return(result)
-
-    # --------------------------------------------------------------------------
-
-
 class _DistanceSorter(object):
     """Sort a list of tags by a value that is a combination of the tag's
     distance from a target lng/lat and it's score, then return the top items.

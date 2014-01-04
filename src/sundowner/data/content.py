@@ -51,10 +51,9 @@ class Data(object):
 
         spec = [{
 
-            # get top scoring (because of compound index) tags within a radius 
-            # of a lng/lat
-            # NOTE: the geoNear aggregation pipeline operator was tried here
-            # but it was slower
+            # Get top scoring (because of compound index) tags within a radius 
+            # of a lng/lat. The geoNear aggregation pipeline operator was tried 
+            # here but it was slower
             "$match": {
                 "loc": {
                     "$geoWithin": {
@@ -152,28 +151,6 @@ class Data(object):
 
         result = yield motor.Op(self._conn.aggregate, spec)
         raise tornado.gen.Return(result["result"])
-
-
-    # OLD (for benchmarking) ---------------------------------------------------
-
-    @tornado.gen.coroutine
-    def get_nearby_old(self, lng, lat, limit):
-        # http://docs.mongodb.org/manual/reference/operator/centerSphere/#op._S_centerSphere
-        # http://docs.mongodb.org/manual/tutorial/calculate-distances-using-spherical-geometry-with-2d-geospatial-indexes/
-        QUERY_RADIUS_RADIANS = float(Data.QUERY_RADIUS) / Data.EARTH_RADIUS
-        spec = {
-            'loc': {
-                '$geoWithin': {
-                    '$centerSphere': [[lng, lat], QUERY_RADIUS_RADIANS],
-                    },
-                },
-            }
-        cursor = self._conn.find(spec).limit(limit)
-        result = yield motor.Op(cursor.to_list)
-        raise tornado.gen.Return(result)
-
-
-    # --------------------------------------------------------------------------
 
     @tornado.gen.coroutine
     def put(self, user_id, text, url, accuracy, lng, lat):
