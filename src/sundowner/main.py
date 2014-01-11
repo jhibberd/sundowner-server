@@ -19,10 +19,11 @@ import tornado.ioloop
 import tornado.web
 from bson.objectid import ObjectId
 from operator import itemgetter
-from sundowner import memsort, validate
+from sundowner import validate
 from sundowner.analytics.activity.pub import ActivityPub
 from sundowner.data.votes import Vote
 from sundowner.error import BadRequestError
+from sundowner.model.content import ContentModel
 
 
 # Helpers ----------------------------------------------------------------------
@@ -53,10 +54,10 @@ class RequestHandler(tornado.web.RequestHandler):
 
         code = getattr(exception, "custom_error_code", status_code)
         self.finish({
-            'meta': {
-                'error_type':       exception.__class__.__name__,
-                'code':             code,
-                'error_message':    exception.message,
+            "meta": {
+                "error_type":       exception.__class__.__name__,
+                "code":             code,
+                "error_message":    exception.message,
                 }})
 
     def complete(self, status_code=httplib.OK, data=None):
@@ -66,11 +67,11 @@ class RequestHandler(tornado.web.RequestHandler):
         http://instagram.com/developer/endpoints/
         """
         result = {
-            'meta': {
-                'code': status_code,
+            "meta": {
+                "code": status_code,
                 }}
         if data is not None:
-            result['data'] = data
+            result["data"] = data
         self.set_status(status_code)
         self.write(result)
         self.finish()
@@ -95,27 +96,8 @@ class ContentHandler(RequestHandler):
         validate.ContentHandlerValidator().validate_get(args)
 
         # get all nearby content
-        top_content = yield sundowner.data.content.get_nearby(
-            args["lng"], args["lat"])
-
-        # refine sort order be performing secondary, in-memory sort using
-        # additional content attributes
-        top_content = memsort.sort(args["lng"], args["lat"], top_content)
-        top_content = top_content[:self._RESULT_SIZE]
-
-        # replace user IDs with usernames
-        user_ids = map(itemgetter("user_id"), top_content)
-        username_map = yield sundowner.data.users.get_usernames(user_ids)
-
-        result = []
-        for content in top_content:
-            username = username_map[content["user_id"]]
-            result.append({
-                "id":           str(content["_id"]),
-                "text":         content["text"],
-                "url":          content["url"],
-                "username":     username,
-                })
+        result = yield ContentModel.get_nearby(
+            args["lng"], args["lat"], user_id)
 
         # write activity
         self.settings["activity_pub"].write_user_view_content(
@@ -131,37 +113,23 @@ class ContentHandler(RequestHandler):
         payload =               self.get_json_request_body()
         args = {
             "access_token":     payload.get("access_token"),
+            "text":             payload.get("text"),
+            "url":              payload.get("url"),
+            "accuracy":         payload.get("accuracy"),
             "lng":              payload.get("lng"),
             "lat":              payload.get("lat"),
-            "text":             payload.get("text"),
-            "accuracy":         payload.get("accuracy"),
-            "url":              payload.get("url"),
             }
         user_id = yield sundowner.auth.validate(args["access_token"])
         validate.ContentHandlerValidator().validate_post(args)
 
-        content_id = ObjectId()
-        yield sundowner.data.content.put({
-            "_id":              content_id, 
-            "text":             args["text"],
-            "url":              args["url"],
-            "user_id":          user_id,
-            "accuracy":         args["accuracy"], # meters
-            "loc": {
-                "type":         "Point",
-                "coordinates":  [args["lng"], args["lat"]],
-                },
-            "votes": {
-                "up":           0,
-                "down":         0,
-                },
-            "score": {
-                "overall":      0,
-                "vote":         0,
-                "day_offset":   0,
-                "week_offset":  0,
-                },
-            })
+        # write content to db
+        content_id = yield sundowner.data.content.put(
+            user_id, 
+            args["text"], 
+            args["url"], 
+            args["accuracy"], 
+            args["lng"], 
+            args["lat"])
 
         # write activity
         self.settings["activity_pub"].write_user_create_content(

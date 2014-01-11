@@ -1,36 +1,14 @@
 import motor
-import sundowner.config
 import sundowner.data
 import sundowner.model.users
+import test
 import tornado.gen
-import unittest
 from bson.objectid import ObjectId
-from sundowner.cache import _ThreadSafeCacheConnection
 from sundowner.model.users import UsersModel
 from tornado.ioloop import IOLoop
 
 
-class Test(unittest.TestCase):
-
-    # Setup --------------------------------------------------------------------
-
-    _CFG_PATH = "/home/jhibberd/projects/sundowner/cfg/dev.yaml"
-    def setUp(self):
-        # init and reset env
-        sundowner.config.init(self._CFG_PATH)
-        sundowner.data.connect()
-        self.clear_db()
-        _ThreadSafeCacheConnection.get().flushall()
-
-    @classmethod
-    def clear_db(cls):
-        @tornado.gen.coroutine
-        def f():
-            yield motor.Op(sundowner.data.users._conn.remove, None)
-        IOLoop.instance().run_sync(f)
-
-
-    # Tests --------------------------------------------------------------------
+class Test(test.TestBase):
 
     def test_get_friends(self):
 

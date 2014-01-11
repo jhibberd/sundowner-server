@@ -1,9 +1,13 @@
 
-* All three endpoints can sustain throughput of roughly 80 requests per second.
+* Before testing a user's access token needs to be added to the environment
+  variables section in JMeter.
 
-* Before testing the following doc needs to be created:
-  db.users.save({"_id": ObjectId("aaaaaaaaaaaaaaaaaaaaaaaa"), "facebook": {"name": "John Smith"}})
+* The Content/GET endpoint is the bottleneck of the API and can sustain a rate
+  of 30 rps with an average response time of 500ms.
 
-* Since implementing in-memory sorting the performance of Content/GET has 
-  dropped from 80rps to 70rps
+  Without using the MongoDB Aggregation Pipeline this endpoint could sustain
+  almost 70 rps but the algorithm was not as sophisticated.
+
+  The various algorithm batch sizes greatly influence the performance of this
+  endpoint.
 
