@@ -8,8 +8,8 @@ from sundowner.model.users import UsersModel
 
 class ContentModel(object):
 
-    _BATCH_SIZE_DB_FRIENDS =    2000
-    _BATCH_SIZE_DB_FINAL =      1000
+    _BATCH_SIZE_DB_FRIENDS =    400
+    _BATCH_SIZE_DB_FINAL =      100
     _BATCH_SIZE_RESULT =        10
 
     @classmethod
