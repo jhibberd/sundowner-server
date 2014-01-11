@@ -20,8 +20,11 @@ class FriendsCache(sundowner.cache.CacheBase):
         k = cls._key(user_id)
         friends = cls.get_conn().get(k)
         if friends is None:
-            return None
-        friends = friends.split(',')
+            return None # cache key not found
+        if friends == "":
+            friends = [] # no registered friends
+        else:
+            friends = friends.split(',')
         friends = map(ObjectId, friends)
         friends = set(friends)
         return friends
