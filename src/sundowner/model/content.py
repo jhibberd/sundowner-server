@@ -12,6 +12,8 @@ class ContentModel(object):
     _BATCH_SIZE_DB_FINAL =      100
     _BATCH_SIZE_RESULT =        10
 
+    _SELF_USERNAME = "Me"
+
     @classmethod
     @tornado.gen.coroutine
     def get_nearby(cls, lng, lat, user_id):
@@ -19,6 +21,10 @@ class ContentModel(object):
         # get a list of the user's Facebook friends; tags authored by 
         # friends are ranked higher
         friends = yield UsersModel.get_friends(user_id)
+
+        # add the user to the friends list; tags created by the user should
+        # also rank higher
+        friends.append(user_id)
 
         # Query the database for tags, performing as much of the query 
         # algorithm in the database as possible for efficiency. Returns a list
@@ -35,15 +41,20 @@ class ContentModel(object):
         # sort order
         tags = _DistanceSorter.sort(lng, lat, tags, cls._BATCH_SIZE_RESULT)
 
-        # author data for tags not created by friends is not shown, but author 
+        # Author data for tags not created by friends is not shown, but author 
         # data for tags created by friends needs to be retrieved from the 
-        # `Users` collection
-        friend_user_ids = []
+        # `Users` collection. Tags created by the used have a special 'self'
+        # username (eg 'Me').
+        friend_user_ids = set()
+        usernames = {}
         for tag in tags:
             if tag["score"]["friend"]:
-                friend_user_ids.append(tag["user_id"])
-        username_map = \
-            yield sundowner.data.users.get_usernames(friend_user_ids)
+                if tag["user_id"] == user_id:
+                    usernames[user_id] = cls._SELF_USERNAME
+                else:
+                    friend_user_ids.add(tag["user_id"])
+        usernames.update(
+            yield sundowner.data.users.get_usernames(friend_user_ids))
             
         # format and return the result
         result = []
@@ -55,7 +66,7 @@ class ContentModel(object):
                 "score":    tag["score"],
                 }
             if tag["score"]["friend"]:
-                entry["username"] = username_map[tag["user_id"]]
+                entry["username"] = usernames[tag["user_id"]]
             result.append(entry)
         
         raise tornado.gen.Return(result)
