@@ -53,8 +53,9 @@ class ContentModel(object):
                     usernames[user_id] = cls._SELF_USERNAME
                 else:
                     friend_user_ids.add(tag["user_id"])
-        usernames.update(
-            yield sundowner.data.users.get_usernames(friend_user_ids))
+        friend_usernames = \
+            yield sundowner.data.users.get_usernames(friend_user_ids)
+        usernames.update(friend_usernames)
             
         # format and return the result
         result = []
