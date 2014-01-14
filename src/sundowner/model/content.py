@@ -24,7 +24,7 @@ class ContentModel(object):
 
         # add the user to the friends list; tags created by the user should
         # also rank higher
-        friends.append(user_id)
+        friends.add(user_id)
 
         # Query the database for tags, performing as much of the query 
         # algorithm in the database as possible for efficiency. Returns a list
