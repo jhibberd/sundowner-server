@@ -1,6 +1,6 @@
 
-api-port:               8051
-www-port:               84
+api-port:               8000
+www-port:               8001
 
 db-host:                localhost
 db-port:                27017
@@ -18,7 +18,7 @@ fb-app-id:              215833641927561
 fb-app-secret:          274af04abdb6490a4186a23a75f5d80d
 
 analytics:
-    port:               83
+    port:               8002
     fb-app-id:          627843653945574
     fb-app-secret:      f504f2908d81726781a8ed4dd480ccac
 
