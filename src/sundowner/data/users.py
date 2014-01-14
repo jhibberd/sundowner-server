@@ -69,6 +69,8 @@ class Data(object):
     @tornado.gen.coroutine
     def get_usernames(self, user_ids):
         """Resolve a list of user IDs to usernames."""
+        if not user_ids:
+            raise tornado.gen.Return({})
         cursor = self._conn.find(
             {"_id": {"$in": user_ids}}, {"facebook.name": 1})
         result = yield motor.Op(cursor.to_list, length=10)
