@@ -123,6 +123,11 @@ function renderLogo() {
             opts.height =               150;
             opts.showName =             true;
             break;
+        case "facebook_logo":
+            opts.width =                1024;
+            opts.height =               1024;
+            opts.showName =             true;
+            break;
 
         // Other ---------------------------------------------------------------
         case "facebook_pp":
