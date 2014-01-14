@@ -11,7 +11,7 @@ cache-host:             localhost
 cache-port:             6379
 cache-db:               1
 
-queue-host:             localhost
+queue-host:             127.0.0.1
 queue-port:             5557
 
 fb-app-id:              215833641927561
