@@ -30,12 +30,6 @@ a {
     padding: 1em;
 }
 
-/* remove this once app link images */
-body .primary-button {
-    background: #02a6eb;
-    color: #fff;
-}
-
 .splash {
     margin: 2em auto 0;
     padding: 3em 0.5em;
@@ -46,7 +40,7 @@ body .primary-button {
         text-align: center;
     }
 
-        .splash .splash-text img {
+        .splash .splash-text img.logo {
             width: 50%;
             max-width: 300px;
         }
@@ -59,11 +53,6 @@ body .primary-button {
         color: #f0f0f0;
         font-weight: 300;
         line-height: 1.4em;
-    }
-
-    /* TODO remove this */
-    .splash .primary-button {
-        font-size: 150%;
     }
 
 .content .content-ribbon {
