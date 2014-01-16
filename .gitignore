@@ -1,3 +1,4 @@
 *.pyc
 *.swp
 src/www/static/*.png
+src/www/static/*.ico

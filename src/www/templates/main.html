@@ -1,29 +1,93 @@
 {% extends "base.html" %}
-{% block content %}
-    <div class="jumbotron">
-        <div class="row">
 
-            <!-- main info -->
-            <div class="col-md-6">
+{% block splash %}
 
-                <img src="{{ static_url("logo.png") }}">
-
-                <h1>Soaptag</h1>
-                <p>Find and leave helpful tags in places around the world.</p>
-     
-                <!-- Apple App Store link -->
-                <a target="_blank" href="https://itunes.apple.com/gb/app/soaptag/id741990470?mt=8&uo=4"><img src="https://linkmaker.itunes.apple.com/htmlResources/assets/en_us//images/web/linkmaker/badge_appstore-lrg.svg" /></a>
-         
-                <!-- Google Play Store link -->
-                <a target="_blank" href="https://play.google.com/store/apps/details?id=com.sundowner"><img alt="Get it on Google Play" src="https://developer.android.com/images/brand/en_generic_rgb_wo_45.png" /></a>
+    <div class="splash">
+        <div class="pure-g-r">
+            <div class="pure-u-1-2">
+                <div class="l-box">
+                    <div class="responsive-container">
+                        <iframe src="//player.vimeo.com/video/81630401?title=0&amp;byline=0&amp;portrait=0&amp;color=33b5e5" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                    </div>
+                </div>
 
             </div>
 
-            <!-- video -->
-            <div class="col-md-6">
-                <iframe width="480" height="360" src="//www.youtube.com/embed/R4S8W0SbFsw" frameborder="0" allowfullscreen></iframe>
+            <div class="pure-u-1-2">
+                <div class="l-box splash-text">
+                    <img src="{{ static_url("logo.png") }}" />
+                    <h2 class="splash-subhead">
+                        Find and leave helpful tags in places around the world.
+                    </h2>
+                    <p>
+                        <a href="https://itunes.apple.com/gb/app/soaptag/id741990470?mt=8&uo=4" class="pure-button primary-button">App Store</a>
+                        <a href="https://play.google.com/store/apps/details?id=com.sundowner" class="pure-button primary-button">Google Play</a>
+                    </p>
+                </div>
             </div>
+        </div>
+    </div>
 
-        </div> <!-- /row -->
-    </div> <!-- /jumbotron -->
 {% end %}
+
+{% block content %}
+
+    <!-- box 1 -->
+    <div class="pure-g-r content-ribbon">
+        <div class="pure-u-1-3">
+            <div class="l-box">
+                <img src="http://placehold.it/400x250"
+                     alt="Placeholder image for example.">
+            </div>
+        </div>
+
+        <div class="pure-u-2-3">
+            <div class="l-box">
+                <h2>Etiam iaculis iaculis lobortis.</h3>
+                <p>
+                    Phasellus eget enim eu lectus faucibus vestibulum. Suspendisse sodales pellentesque elementum. Morbi fermentum dui sit amet libero tincidunt rutrum. Nam sodales consequat metus sed accumsan.
+                </p>
+            </div>
+        </div>
+    </div><!-- /box 1 -->
+
+    <!-- box 2 -->
+    <div class="pure-g-r content-ribbon">
+        <div class="pure-u-1-3">
+            <div class="l-box">
+                <img src="http://placehold.it/400x250"
+                     alt="Placeholder image for example.">
+            </div>
+        </div>
+
+        <div class="pure-u-2-3">
+            <div class="l-box">
+                <h2>Etiam iaculis iaculis lobortis.</h2>
+                <p>
+                    Phasellus eget enim eu lectus faucibus vestibulum. Suspendisse sodales pellentesque elementum. Morbi fermentum dui sit amet libero tincidunt rutrum. Nam sodales consequat metus sed accumsan.
+                </p>
+            </div>
+        </div>
+    </div><!-- box 2 -->
+
+    <!-- box 3 -->
+    <div class="pure-g-r content-ribbon">
+        <div class="pure-u-1-3">
+            <div class="l-box">
+                <img src="http://placehold.it/400x250"
+                     alt="Placeholder image for example.">
+            </div>
+        </div>
+
+        <div class="pure-u-2-3">
+            <div class="l-box">
+                <h2>Etiam iaculis iaculis lobortis.</h2>
+                <p>
+                    Phasellus eget enim eu lectus faucibus vestibulum. Suspendisse sodales pellentesque elementum. Morbi fermentum dui sit amet libero tincidunt rutrum. Nam sodales consequat metus sed accumsan.
+                </p>
+            </div>
+        </div>
+    </div><!-- /box 3 -->
+
+{% end %}
+

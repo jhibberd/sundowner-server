@@ -1,6 +1,179 @@
 
-a.home {
-    display: block;
-    margin-top: 20px;
+/* Based on: 
+ * http://purecss.io/combo/1.8.2?/css/layouts/marketing.css 
+ * (but modified)
+ */
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: 0 auto 5em; /* bottom = footer height */
+    line-height: 1.7em;
+    height: 100%;
+}
+
+a {
+    color: #33B5E5;
+    text-decoration: none;
+}
+
+.l-box {
+    padding: 1em;
+}
+
+/* remove this once app link images */
+body .primary-button {
+    background: #02a6eb;
+    color: #fff;
+}
+
+.splash {
+    margin: 2em auto 0;
+    padding: 3em 0.5em;
+    background: #33B5E5;
+}
+
+    .splash .splash-text {
+        text-align: center;
+    }
+
+        .splash .splash-text img {
+            width: 50%;
+            max-width: 300px;
+        }
+
+        .splash .splash-text h2 {
+            margin: 0;
+        }
+
+    .splash .splash-subhead {
+        color: #f0f0f0;
+        font-weight: 300;
+        line-height: 1.4em;
+    }
+
+    /* TODO remove this */
+    .splash .primary-button {
+        font-size: 150%;
+    }
+
+.content .content-ribbon {
+    margin: 3em;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+    .content .content-ribbon .l-box p {
+        font-size: 1.5em;
+        font-weight: 300;
+    }
+
+.content .content-full-page {
+    margin: 4.5em auto 0;
+    padding: 5.5em 0;
+    color: #333;
+}
+
+    .content .content-full-page p {
+        font-size: 1.5em;
+        font-weight: 300;
+    }
+
+    .content .content-full-page .content {
+        margin: 0 auto;
+    }
+
+.header {
+    margin: 0 0;
+}
+
+    .header .pure-menu.pure-menu-open.pure-menu-fixed {
+        border: 0;
+        border-bottom: 1px solid #fff;
+    }
+
+    .header .pure-menu.pure-menu-open { 
+        background: #33B5E5; 
+    }
+
+    .header .pure-menu {
+        padding: 0.5em;
+    }
+
+        .header .pure-menu a { 
+            color: #f0f0f0;
+        }
+
+        .header .pure-menu li a:hover {
+            background: none;
+            border: none;
+            color: #fff;
+        }
+
+/* Sticky footer
+ * http://mystrd.at/modern-clean-css-sticky-footer/
+ */
+.footer {
+    margin: 0 0;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 5em;
+    width: 100%;
+    vertical-align: bottom;
+}
+
+    .footer .pure-menu.pure-menu-open { 
+        background: #eee; 
+    }
+
+    .footer .pure-menu {
+        padding: 1em 0.5em;
+        position: absolute;
+        bottom: 0;
+    }
+
+        .footer .pure-menu a {
+            color: #aaa;
+        }
+
+        .footer .pure-menu .pure-menu-heading {
+            font-size: 90%;
+            text-transform: none;
+            color: #aaa;
+        }
+
+        .footer .pure-menu li a:hover {
+            background: none;
+            border: none;
+            color: #888;
+        }
+
+/* Responsive video content
+ * http://demosthenes.info/blog/649/Responsive-Design-Create-Fluid-YouTube-and-Vimeo-Content
+ */
+.responsive-container { 
+    position: relative; 
+    padding-bottom: 56.25%; 
+    padding-top: 30px; 
+    height: 0; 
+    overflow: 
+    hidden; 
+}
+
+    .responsive-container iframe { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+    }
 

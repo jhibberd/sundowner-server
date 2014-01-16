@@ -1,37 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <title>Solve micro-problems and share them with the world - Soaptag</title>
-        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
-        <link rel="stylesheet" href="{{ static_url("custom.css") }}">
-    </head>
-    <body>
-        <div class="container">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find and leave helpful tags in places around the world.">
+    <title>Soaptag</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel="stylesheet" href="{{ static_url("custom.css") }}">
+</head>
+<body>
+
+    <div class="content">
+
+        <!-- header -->
+        <div class="header">
+            <div class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
+                <a class="pure-menu-heading" href="/"><img src="{{ static_url("logo-mini.png") }}" /></a>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="https://www.facebook.com/soaptag.org">Community</a></li>
+                    <li><a href="/support">Support</a></li>
+                    <li><a href="/jobs">Jobs</a></li>
+                </ul>
+            </div>
+        </div><!-- /header -->
+
+        {% block splash %}{% end %}
+
+        <div class="content">
 
             {% block content %}{% end %}
 
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>SOCIAL</h5>
-                    <ul class="list-unstyled">
-                        <li><a target="_blank" href="https://www.facebook.com/soaptag.org">Soaptag on Facebook</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h5>ABOUT</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="/privacy/">Privacy Policy</a></li>
-                        <li><a href="/terms/">Terms of Use</a></li>
-                        <li><a href="/support/">Support</a></li>
-                        <li><a href="mailto:soaptag@gmail.com">Contact Us</a></li>
-                    </ul>
-                </div>
-            </div>
+        </div><!-- /content -->
 
-            <div class="footer">
-                <p class="text-muted">&copy; James Hibberd 2013</p>
+        <!-- footer -->
+        <div class="footer">
+            <div class="pure-menu pure-menu-open pure-menu-horizontal">
+                <div class="pure-menu-heading">&copy; 2014 James Hibberd</div>
+                <ul>
+                    <li><a href="/terms">Terms</a></li>
+                    <li><a href="/privacy">Privacy</a></li>
+                </ul>
             </div>
+        </div><!-- /footer -->
 
-        </div>
-    </body>
+    </div><!-- /content -->
+
+</body>
 </html>
+

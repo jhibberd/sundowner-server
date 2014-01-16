@@ -135,17 +135,13 @@ function renderLogo() {
             opts.height =               180;
             break;
         case "website":
-            opts.width =                180;
-            opts.height =               180;
-            opts.backgroundColor =      "#EEEEEE";
-            opts.foregroundColor =      "#333333";
-            opts.crop =                 true;
+            opts.width =                300;
+            opts.height =               300;
+            opts.showName =             true;
             break;
         case "website_mini":
-            opts.width =                120;
-            opts.height =               120;
-            opts.backgroundColor =      "#FFFFFF";
-            opts.foregroundColor =      "#333333";
+            opts.width =                65;
+            opts.height =               65;
             opts.crop =                 true;
             break;
     }
