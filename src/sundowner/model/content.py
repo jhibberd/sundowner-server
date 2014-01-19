@@ -63,9 +63,10 @@ class ContentModel(object):
             entry = {
                 "id":       str(tag["_id"]),
                 "text":     tag["text"],
-                "url":      tag["url"],
                 "score":    tag["score"],
                 }
+            if tag["url"]:
+                entry["url"] = tag["url"]
             if tag["score"]["friend"]:
                 entry["username"] = usernames[tag["user_id"]]
             result.append(entry)
