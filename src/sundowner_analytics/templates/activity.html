@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>Activity</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Actor</th>
+                <th>Verb</th>
+                <th>Subject</th>
+                <th>Location</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in activity %}
+            <tr>
+                <td>{{ a["time"] }}</td>
+                <td><a target="_blank" href="/users/{{ a["actor"]["id"] }}">{{ a["actor"]["name"] }}</a></td>
+                <td>{{ a["verb"] }}</td>
+                <td>{{ a["subject"] }}</td>
+                <td>
+                    {% if a["location"] %}
+                        <a target="_blank" href="http://maps.google.com/maps?q={{ a["location"]["lat"] }},{{ a["location"]["lng"] }}">Location</a>
+                    {% else %}
+                        <em>None</em>
+                    {% end %}
+                </td>
+            </tr>
+            {% end %}
+        </tbody>
+    </table>
+{% end %}

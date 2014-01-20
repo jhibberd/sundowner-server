@@ -16,7 +16,6 @@ from sundowner.error import BadRequestError
 
 class ContentHandlerValidator(object):
 
-    @tornado.gen.coroutine
     def validate_get(self, args):
 
         lng = args["lng"]
@@ -41,17 +40,6 @@ class ContentHandlerValidator(object):
             raise BadRequestError("'lat' is not a valid latitude.") 
         args["lat"] = lat
 
-        user_id = args["user_id"]
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        user_id = ObjectId(user_id)
-        if not (yield sundowner.data.users.exists(user_id)):
-            raise BadRequestError("'user_id' does not exist.")
-        args["user_id"] = user_id
-
-    @tornado.gen.coroutine
     def validate_post(self, args):
 
         lng = args["lng"]
@@ -88,16 +76,6 @@ class ContentHandlerValidator(object):
             raise BadRequestError(
                 "'text' cannot exceed %s characters." % MAX_TEXT_LEN)
         args["text"] = text
-
-        user_id = args["user_id"]
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        user_id = ObjectId(user_id)
-        if not (yield sundowner.data.users.exists(user_id)):
-            raise BadRequestError("'user_id' does not exist.")
-        args["user_id"] = user_id
 
         accuracy = args["accuracy"]
         if accuracy is not None:
@@ -138,31 +116,13 @@ class VotesHandlerValidator(object):
         content_id = ObjectId(content_id)
         if not (yield sundowner.data.content.exists(content_id)):
             raise BadRequestError("'content_id' does not exist.")
-        args["content_id"]
-
-        user_id = args["user_id"]
-        if user_id is None:
-            raise BadRequestError("Missing 'user_id' argument.")
-        if not ObjectId.is_valid(user_id):
-            raise BadRequestError("'user_id' is not a valid ID.")
-        user_id = ObjectId(user_id)
-        if not (yield sundowner.data.users.exists(user_id)):
-            raise BadRequestError("'user_id' does not exist.")
-        args["user_id"]
+        args["content_id"] = content_id
 
         vote = args["vote"]
         if vote is None:
             raise BadRequestError("Missing 'vote' argument.")
         if vote not in [Vote.UP, Vote.DOWN]:
             raise BadRequestError("'vote' is not a valid vote type.")
-
-
-class UsersHandlerValidator(object):
-
-    def validate_post(self, args):
-        access_token = args['access_token']
-        if access_token is None:
-            raise BadRequestError("Missing 'access_token' argument.")
 
 
 # Constants --------------------------------------------------------------------

@@ -1,0 +1,31 @@
+
+api-port:               9000
+www-port:               9001
+
+db-host:                localhost
+db-port:                27017
+db-name-primary:        sundowner_sandbox
+db-name-analytics:      sundowner_analytics
+
+cache-host:             localhost
+cache-port:             6379
+cache-db:               0
+
+queue-host:             127.0.0.1
+queue-port:             5556
+
+fb-app-id:              215833641927561
+fb-app-secret:          274af04abdb6490a4186a23a75f5d80d
+
+analytics:
+    port:               9002
+    fb-app-id:          552939521453001
+    fb-app-secret:      98b9b622175a332c99277943b6f7b51a
+
+score-weights:
+    vote:               0.8
+    day_offset:         0.3
+    week_offset:        0.1
+    friend:             2.0
+    location:           1.5
+
