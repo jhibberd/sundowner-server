@@ -4,8 +4,8 @@ www-port:               8001
 
 db-host:                localhost
 db-port:                27017
-db-name-primary:        sundowner_primary_dev
-db-name-analytics:      sundowner_analytics_dev
+db-name-primary:        sundowner_dev_primary
+db-name-analytics:      sundowner_dev_analytics
 
 cache-host:             localhost
 cache-port:             6379

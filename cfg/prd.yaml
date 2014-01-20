@@ -4,8 +4,8 @@ www-port:               9001
 
 db-host:                localhost
 db-port:                27017
-db-name-primary:        sundowner_sandbox
-db-name-analytics:      sundowner_analytics
+db-name-primary:        sundowner_prd_primary
+db-name-analytics:      sundowner_prd_analytics
 
 cache-host:             localhost
 cache-port:             6379

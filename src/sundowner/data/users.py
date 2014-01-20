@@ -71,6 +71,7 @@ class Data(object):
         """Resolve a list of user IDs to usernames."""
         if not user_ids:
             raise tornado.gen.Return({})
+        user_ids = list(user_ids) # MongoDB spec doesn't accept sets
         cursor = self._conn.find(
             {"_id": {"$in": user_ids}}, {"facebook.name": 1})
         result = yield motor.Op(cursor.to_list, length=10)
