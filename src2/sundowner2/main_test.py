@@ -10,7 +10,7 @@ HOST_DB = "ubuntu"
 USER_A = "James"
 USER_B = "Annie"
 
-class FooTest(unittest.TestCase):
+class Test(unittest.TestCase):
 
     def setUp(self):
         self.db = pymongo.MongoClient(HOST_DB).minitag
@@ -50,6 +50,16 @@ class FooTest(unittest.TestCase):
         r = requests.get(HOST_API+"/tags/", params=params)
         assert r.json()["data"] == []
 
+        # create a post by USER_A
+        for i in range(50):
+            data = json.dumps({
+                "lat":      1,
+                "lng":      1,
+                "text":     "hello",
+                "user_id":  USER_B,
+                })
+            requests.post(HOST_API+"/tags/", data=data)
+
         # if USER_B requests tags they should see the tag created by USER_A
         params = {
             "user_id":  USER_B,
@@ -57,13 +67,14 @@ class FooTest(unittest.TestCase):
             "lng":      1,
             }
         r = requests.get(HOST_API+"/tags/", params=params)
-        assert r.json()["data"] == [{
-            "id":       tag_id,
-            "lat":      1,
-            "lng":      1,
-            "user_id":  USER_A,
-            "text":     "hello",
-            }]
+        assert len(r.json()["data"]) == 1
+        match = r.json()["data"][0]
+        assert match["id"] == tag_id
+        assert match["lat"] == 1
+        assert match["lng"] == 1
+        assert match["user_id"] == USER_A
+        assert match["text"] == "hello"
+        assert "user_image_url" in match
 
     def test_post_first_tag(self):
         data = json.dumps({
@@ -117,25 +128,15 @@ class FooTest(unittest.TestCase):
 
     # Bad Request --------------------------------------------------------------
 
-    def test_delete_tag_youre_not_a_recipient_of(self):
-
-        # create a post by USER_A
-        data = json.dumps({
-            "lat":      1,
-            "lng":      1,
-            "text":     "hello",
-            "user_id":  USER_A,
-            })
-        r = requests.post(HOST_API+"/tags/", data=data)
-        tag_id = r.json()["data"]["tag_id"]
-
-        # USER_A shouldn't be able to delete the tag because they aren't a
-        # recipient
+    def test_get_missing_arg(self):
         params = {
-            "user_id":  USER_A,
+            "user_id":  USER_B,
+            "lat":      1,
+            # missing `lng`
             }
-        r = requests.delete(HOST_API+"/tags/"+tag_id, params=params)
-        print r.json()
+        r = requests.get(HOST_API+"/tags/", params=params)
+        assert r.status_code == httplib.BAD_REQUEST
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,4 @@
+.idea
 *.pyc
 *.swp
 src/www/static/*.png
