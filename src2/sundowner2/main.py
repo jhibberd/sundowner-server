@@ -13,8 +13,8 @@ import tornado.web
 from bson.objectid import ObjectId
 
 
-API_PORT = 8888
-DB_HOST = "ubuntu"
+API_PORT = 4000
+DB_HOST = "localhost"
 DB_PORT = 27017
 
 
@@ -232,7 +232,7 @@ class GooglePushNotificationService(object):
     http://developer.android.com/google/gcm
     """
 
-    _API_KEY = "AIzaSyBbRjI0oBaUoGF7kQ4AhqA2MkUgUcktN68"
+    _API_KEY = "AIzaSyCO9rvI0C-vW9AG-dxVmZm_iZPVOr8yDqk"
     _GCM_ENDPOINT = "https://android.googleapis.com/gcm/send"
 
     @classmethod
@@ -266,7 +266,7 @@ class ApplePushNotificationService(object):
         5. Create a new App ID using the Certificate (with Push Notifications
            enabled)
         6. Create a new Provisioning Profile (which requires its own Certificate
-           which also has to be added to Keychain Acccess)
+           which also has to be added to Keychain Access)
         7. Export the Certificate as a .p12 file
         8. Convert it to a .pem file using:
            https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/ProvisioningDevelopment.html
@@ -274,7 +274,7 @@ class ApplePushNotificationService(object):
     """
 
     _APNS_HOST = ("gateway.sandbox.push.apple.com", 2195)
-    _CERTIFICATE_PATH = "/Users/jhibberd/Desktop/jameshibberd.APNSTest.pem"
+    _CERTIFICATE_PATH = "/home/jhibberd/certificates/jameshibberd.PopHello.pem"
     _sock = None
 
     @classmethod
