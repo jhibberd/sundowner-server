@@ -1,7 +1,12 @@
+import binascii
 import httplib
 import json
 import motor
 import pymongo
+import requests
+import socket
+import ssl
+import struct
 import tornado.gen
 import tornado.ioloop
 import tornado.web
@@ -138,6 +143,8 @@ class TagHandler(RequestHandlerBase):
         """Remove a user from being the future recipient of a tag.
 
         Typically in response to the user having read and acknowledged the tag.
+        When a tag is acknowledge a notification is pushed to the author's
+        device.
 
         The return value from the `update` method doesn't indicate whether
         `user_id` was actually in the `recipients` array, so this endpoint
@@ -150,7 +157,155 @@ class TagHandler(RequestHandlerBase):
         yield self.db.tags.update(
             {"_id": tag_id}, {"$pull": {"recipients": user_id}})
 
+        PushNotificationService(self.db).\
+            notify_tag_acknowledgement(tag_id, user_id)
+
         self.complete()
+
+
+class DevicesHandler(RequestHandlerBase):
+
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def post(self):
+        """Register a device for a user.
+
+        Once a device is registered for a user it will receive push
+        notifications.
+        """
+
+        user_id, device_id, device_type = \
+            DevicesRequestValidator.validate_post(self)
+
+        doc = {
+            "_id":          user_id,
+            "device_id":    device_id,
+            "device_type":  device_type,
+            }
+        yield self.db.users.save(doc)
+
+        self.complete()
+
+
+# Post Notification Service ----------------------------------------------------
+
+# TODO: pushing to Google/Apple servers should probably be handled in a
+#       separate process via a queue to prevent blocking of the tornado IO loop
+
+class PushNotificationService(object):
+    """Generic interface for pushing notifications to a mobile device
+    regardless of the OS being run on the device.
+    """
+
+    def __init__(self, db):
+        self._db = db
+
+    @tornado.gen.coroutine
+    def notify_tag_acknowledgement(self, tag_id, actor_id):
+        """Push a notification to a user's device notifying them that user
+        'actor_id' consumed (acknowledged) the tag 'tag_id' that they authored.
+        """
+        tag = yield self._db.tags.find_one(tag_id)
+        if tag is None:
+            raise Exception("Tag not found")
+        author = yield self._db.users.find_one(tag["user_id"])
+        actor = yield self._db.users.fine_one(actor_id)
+        if author is None or actor is None:
+            raise Exception("User not found")
+        device_id = author.get("device_id")
+        device_type = author.get("device_type")
+        if device_id is None or device_type is None:
+            raise Exception("User hasn't registered device")
+        if device_type == DeviceType.GOOGLE:
+            GooglePushNotificationService.notify(device_id, tag, actor)
+        elif device_type == DeviceType.APPLE:
+            ApplePushNotificationService.notify(device_id, tag, actor)
+        else:
+            raise Exception("Unknown device type")
+
+
+class GooglePushNotificationService(object):
+    """Push a notification to a device running Android OS using Google Cloud
+    Messaging.
+
+    http://developer.android.com/google/gcm
+    """
+
+    _API_KEY = "AIzaSyBbRjI0oBaUoGF7kQ4AhqA2MkUgUcktN68"
+    _GCM_ENDPOINT = "https://android.googleapis.com/gcm/send"
+
+    @classmethod
+    def notify(cls, device_id, tag, actor):
+        message = "%s found your tag \"%s\"" % (actor["user_id"], tag["text"])
+        headers = {
+            "Authorization":    "key=%s" % cls._API_KEY,
+            "Content-Type":     "application/json",
+            }
+        data = json.dumps({
+            "registration_ids": [device_id],
+            "data": {
+                "message":      message
+                },
+            })
+        r = requests.post(cls._GCM_ENDPOINT, headers=headers, data=data)
+        if r.status_code != httplib.OK:
+            print "failed to notify Apple device"
+
+
+class ApplePushNotificationService(object):
+    """Push a notification to a device running iOS using Apple Push
+    Notification Service.
+
+    Generating the certificate:
+
+        1. Login to the Apple Developer Member Center
+           https://developer.apple.com/membercenter
+        2. Create a CSR using Keychain Access
+        3. Create a new Certificate using the CSR
+        4. Install the Certificate in Keychain Access
+        5. Create a new App ID using the Certificate (with Push Notifications
+           enabled)
+        6. Create a new Provisioning Profile (which requires its own Certificate
+           which also has to be added to Keychain Acccess)
+        7. Export the Certificate as a .p12 file
+        8. Convert it to a .pem file using:
+           https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/ProvisioningDevelopment.html
+
+    """
+
+    _APNS_HOST = ("gateway.sandbox.push.apple.com", 2195)
+    _CERTIFICATE_PATH = "/Users/jhibberd/Desktop/jameshibberd.APNSTest.pem"
+    _sock = None
+
+    @classmethod
+    def notify(cls, device_id, message):
+
+        # the socket should remain open
+        # repeatedly opening and closing the socket will be interpreted by
+        # Apple as a DoS attack
+        if cls._sock is None:
+            cls._sock = ssl.wrap_socket(
+                socket.socket(socket.AF_INET, socket.SOCK_STREAM),
+                ssl_version=ssl.PROTOCOL_SSLv3,
+                certfile=cls._CERTIFICATE_PATH)
+            cls._sock.connect(cls._APNS_HOST)
+
+        payload = json.dumps({
+            "aps": {
+                "alert":    message,
+                "sound":    "default",
+                },
+            })
+        device_token_bin = binascii.unhexlify(device_id)
+        fmt = "!cH32sH{0:d}s".format(len(payload))
+        cmd = "\x00"
+        message = struct.pack(
+            fmt, cmd, len(device_token_bin), device_token_bin, len(payload),
+            payload)
+        cls._sock.write(message)
+
+        # no need to close the socket as it should be kept open
+        # cls._sock.close()
 
 
 # Request Validators -----------------------------------------------------------
@@ -261,13 +416,50 @@ class TagRequestValidator(object):
         return user_id
 
 
-# Errors -----------------------------------------------------------------------
+class DevicesRequestValidator(object):
+    """Validate and format requests to register a device with a User resource.
+    """
+
+    @staticmethod
+    def validate_post(handler):
+
+        try:
+            body = json.loads(handler.request.body)
+        except (ValueError, TypeError):
+            raise BadRequestError("Body is invalid JSON")
+
+        # user_id
+        user_id = body.get("user_id")
+        if user_id is None:
+            raise BadRequestError("Missing 'user_id' argument")
+
+        # device_id
+        device_id = body.get("device_id")
+        if device_id is None:
+            raise BadRequestError("Missing 'device_id' argument")
+
+        # device type
+        device_type = body.get("device_type")
+        if device_type is None:
+            raise BadRequestError("Missing 'device_type' argument")
+        if device_type not in [DeviceType.GOOGLE, DeviceType.APPLE]:
+            raise BadRequestError("Invalid 'device_type' value")
+
+        return user_id, device_id, device_type
+
+
+# Errors & Enums ---------------------------------------------------------------
 
 class BadRequestError(tornado.web.HTTPError):
 
     def __init__(self, message):
         super(BadRequestError, self).__init__(httplib.BAD_REQUEST)
         self.message = message
+
+
+class DeviceType(object):
+    GOOGLE = "google"
+    APPLE = "apple"
 
 
 # Placeholder Structures -------------------------------------------------------
@@ -313,8 +505,9 @@ def main():
 
     # start listening for HTTP request
     application = tornado.web.Application([
-        (r"/tags/?",                  TagsHandler),   # GET, POST
-        (r"/tags/([0-9a-f]{24})/?",   TagHandler),    # DELETE
+        (r"/tags/?",                    TagsHandler),       # GET, POST
+        (r"/tags/([0-9a-f]{24})/?",     TagHandler),        # DELETE
+        (r"/devices",                   DevicesHandler)     # POST
         ],
         db=db,
         debug=True)

@@ -160,6 +160,48 @@ function drawLogo(opts) {
     // provided, calculate the size of the biggest square that fits inside
     // the rectangle
     var size = Math.min(opts.width, opts.height);
+
+    // calculate offset of square within rectangle, so that it appears in the
+    // middle
+    var squareX = (size == opts.width) ? 0 : (opts.width - opts.height) / 2;
+    var squareY = (size == opts.height) ? 0 : (opts.height - opts.width) / 2;
+
+    var unit = size / 10;
+
+    var canvasWidth =   opts.width;
+    var canvasHeight =  opts.height;
+
+    // prepare the canvas
+    var canvas =        document.getElementById("canvas");
+    var ctx =           canvas.getContext("2d");
+    ctx.canvas.width =  canvasWidth;
+    ctx.canvas.height = canvasHeight;
+    ctx.fillStyle =     opts.backgroundColor;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle =     opts.foregroundColor;
+
+    var unit = size / 10;
+
+    // card
+    ctx.fillRect(squareX + unit*2, squareY + unit, size - unit*4, size - unit*2);
+
+    ctx.fillStyle =     "#0099CC";
+
+    // picture
+    ctx.fillRect(squareX + unit*3, squareY + unit*2, unit, unit);
+
+    // message
+    ctx.fillRect(squareX + unit*3, squareY + unit*5, size - unit*6 - unit*.5, unit*.5);
+    ctx.fillRect(squareX + unit*3, squareY + unit*6, size - unit*6 - unit*1.5, unit*.5);
+    ctx.fillRect(squareX + unit*3, squareY + unit*7, size - unit*6 - unit*1, unit*.5);
+}
+
+function drawLogo2(opts) {
+
+    // drawing takes place within a square, so if rectangular dimensions are
+    // provided, calculate the size of the biggest square that fits inside
+    // the rectangle
+    var size = Math.min(opts.width, opts.height);
     
     // measure size of logo components relative to the square size
     var cardHeight =    opts.cardScale * size;
