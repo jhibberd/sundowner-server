@@ -216,10 +216,11 @@ class PushNotificationService(object):
         device_type = author.get("device_type")
         if device_id is None or device_type is None:
             raise Exception("User hasn't registered device")
+        message = "%s found your tag \"%s\"" % (actor["user_id"], tag["text"])
         if device_type == DeviceType.GOOGLE:
-            GooglePushNotificationService.notify(device_id, tag, actor)
+            GooglePushNotificationService.notify(device_id, message)
         elif device_type == DeviceType.APPLE:
-            ApplePushNotificationService.notify(device_id, tag, actor)
+            ApplePushNotificationService.notify(device_id, message)
         else:
             raise Exception("Unknown device type")
 
@@ -235,8 +236,7 @@ class GooglePushNotificationService(object):
     _GCM_ENDPOINT = "https://android.googleapis.com/gcm/send"
 
     @classmethod
-    def notify(cls, device_id, tag, actor):
-        message = "%s found your tag \"%s\"" % (actor["user_id"], tag["text"])
+    def notify(cls, device_id, message):
         headers = {
             "Authorization":    "key=%s" % cls._API_KEY,
             "Content-Type":     "application/json",
