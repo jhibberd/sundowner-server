@@ -157,7 +157,7 @@ class TagHandler(RequestHandlerBase):
         yield self.db.tags.update(
             {"_id": tag_id}, {"$pull": {"recipients": user_id}})
 
-        PushNotificationService(self.db).\
+        yield PushNotificationService(self.db).\
             notify_tag_acknowledgement(tag_id, user_id)
 
         self.complete()
@@ -209,14 +209,14 @@ class PushNotificationService(object):
         if tag is None:
             raise Exception("Tag not found")
         author = yield self._db.users.find_one(tag["user_id"])
-        actor = yield self._db.users.fine_one(actor_id)
+        actor = yield self._db.users.find_one(actor_id)
         if author is None or actor is None:
             raise Exception("User not found")
         device_id = author.get("device_id")
         device_type = author.get("device_type")
         if device_id is None or device_type is None:
             raise Exception("User hasn't registered device")
-        message = "%s found your tag \"%s\"" % (actor["user_id"], tag["text"])
+        message = "%s found your tag \"%s\"" % (actor_id, tag["text"])
         if device_type == DeviceType.GOOGLE:
             GooglePushNotificationService.notify(device_id, message)
         elif device_type == DeviceType.APPLE:
@@ -249,7 +249,7 @@ class GooglePushNotificationService(object):
             })
         r = requests.post(cls._GCM_ENDPOINT, headers=headers, data=data)
         if r.status_code != httplib.OK:
-            print "failed to notify Apple device"
+            print "failed to notify Google device"
 
 
 class ApplePushNotificationService(object):
